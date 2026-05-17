@@ -137,6 +137,6 @@ if __name__ == "__main__":
         help="Project root directory",
         type=str
     )
-    
+
     args = parser.parse_args()
     parse_and_write_dataset(args.project_root)

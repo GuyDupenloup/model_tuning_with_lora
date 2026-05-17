@@ -16,7 +16,7 @@ def get_prompts(filepath):
     if not os.path.isfile(filepath):
         raise FileNotFoundError(f'Unable to find JSON prompts file {filepath}')
     
-    with open(filepath, 'r', encoding='utf-8') as f:
+    with open(filepath, "r", encoding="utf-8") as f:
         json_prompts = json.load(f)
     prompt_data = {int(k): v for k, v in json_prompts.items()}
 
@@ -138,7 +138,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '--prompts_filepath',
-        help='Path to the JSON containing the prompts',
+        help='Path to the JSON file containing the prompts',
         required=True,
         type=str
     )

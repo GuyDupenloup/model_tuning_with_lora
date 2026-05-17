@@ -12,7 +12,6 @@ from utils.model_utils import (
     create_gpt2_language_model, load_openai_gpt2_weights, load_gpt2_model
 )
 
-
 def evaluate(model, test_ds):
 
     loss, accuracy, perplexity = model.evaluate(test_ds, verbose=1)
@@ -78,77 +77,75 @@ def train_baseline(model_size, data_loaders, train_dir, openai_filepath):
     )
     model.save(train_dir, 'squad_baseline')
 
-    #---------------------------------------------------------------
+    # #---------------------------------------------------------------
 
-    print(f"\n{'-' * 50}\n{'-' * 50}\n")
+    # print(f"\n{'-' * 50}\n{'-' * 50}\n")
 
-    print(f'\nCreating GPT2-2 model `{model_size}`')
-    model = create_gpt2_language_model(model_size)
-    load_openai_gpt2_weights(model, openai_filepath)
-    model.compile()
+    # print(f'\nCreating GPT2-2 model `{model_size}`')
+    # model = create_gpt2_language_model(model_size)
+    # load_openai_gpt2_weights(model, openai_filepath)
+    # model.compile()
 
-    print('\nEvaluating model on `wikilarge` before tuning')
-    evaluate(model, data_loaders['wikilarge'][2])
+    # print('\nEvaluating model on `wikilarge` before tuning')
+    # evaluate(model, data_loaders['wikilarge'][2])
 
-    print('Training model on `wikilarge`')
-    train(
-        model,
-        dropout_rate=0.1,
-        learning_rate=5e-5,
-        epochs=2,
-        data_loaders=data_loaders['wikilarge'],
-        train_dir=train_dir
-    )
-    model.save(train_dir, 'wikilarge_baseline')
+    # print('Training model on `wikilarge`')
+    # train(
+    #     model,
+    #     dropout_rate=0.1,
+    #     learning_rate=5e-5,
+    #     epochs=2,
+    #     data_loaders=data_loaders['wikilarge'],
+    #     train_dir=train_dir
+    # )
+    # model.save(train_dir, 'wikilarge_baseline')
 
-    #---------------------------------------------------------------
+    # #---------------------------------------------------------------
 
-    print(f"\n{'-' * 50}\n{'-' * 50}\n")
+    # print(f"\n{'-' * 50}\n{'-' * 50}\n")
 
-    print(f'\nCreating gpt-2 model `{model_size}`')
-    model = create_gpt2_language_model(model_size)
-    load_openai_gpt2_weights(model, openai_filepath)
-    model.compile()
+    # print(f'\nCreating gpt-2 model `{model_size}`')
+    # model = create_gpt2_language_model(model_size)
+    # load_openai_gpt2_weights(model, openai_filepath)
+    # model.compile()
 
-    print('\nEvaluating model on `ag_news` before tuning')
-    evaluate(model, data_loaders['ag_news'][2])
+    # print('\nEvaluating model on `ag_news` before tuning')
+    # evaluate(model, data_loaders['ag_news'][2])
 
-    print('Training model on `ag_news`')
-    train(
-        model,
-        dropout_rate=0.15,
-        learning_rate=1e-4,
-        epochs=2,
-        data_loaders=data_loaders['ag_news'],
-        train_dir=train_dir
-    )
-    model.save(train_dir, 'ag_news_baseline')
+    # print('Training model on `ag_news`')
+    # train(
+    #     model,
+    #     dropout_rate=0.1,
+    #     learning_rate=1e-4,
+    #     epochs=2,
+    #     data_loaders=data_loaders['ag_news'],
+    #     train_dir=train_dir
+    # )
+    # model.save(train_dir, 'ag_news_baseline')
 
 
 def train_sequential(train_dir, data_loaders):
 
-    print(f'\nLoading model `squad_baseline` from directory {train_dir}')
-    model = load_gpt2_model(train_dir, "squad_baseline")
-    model.compile()
+    # print(f'\nLoading model `squad_baseline` from directory {train_dir}')
+    # model = load_gpt2_model(train_dir, "squad_baseline")
+    # model.compile()
 
-    evaluate(model, data_loaders["squad"][2])
+    # evaluate(model, data_loaders["squad"][2])
 
-    print("\nTraining `squad` baseline on `wikilarge`")
-    train(
-        model,
-        dropout_rate=0.1,
-        learning_rate=5e-5,
-        epochs=2,
-        data_loaders=data_loaders["wikilarge"],
-        train_dir=train_dir
-    )
+    # print("\nTraining `squad` baseline on `wikilarge`")
+    # train(
+    #     model,
+    #     dropout_rate=0.1,
+    #     learning_rate=5e-5,
+    #     epochs=2,
+    #     data_loaders=data_loaders["wikilarge"],
+    #     train_dir=train_dir
+    # )
 
-    print("\nRe-evaluating model on `squad`")
-    evaluate(model, data_loaders["squad"][2])
+    # print("\nRe-evaluating model on `squad`")
+    # evaluate(model, data_loaders["squad"][2])
 
     #---------------------------------------------------------------
-
-    print(f"\n{"-" * 50}\n{"-" * 50}\n")
 
     print(f"\nLoading model `wikilarge_baseline` from directory {train_dir}")
     model = load_gpt2_model(train_dir, "wikilarge_baseline")
@@ -171,25 +168,25 @@ def train_sequential(train_dir, data_loaders):
 
     #---------------------------------------------------------------
 
-    print(f"\n{"-" * 50}\n{"-" * 50}\n")
+    # print(f"\n{"-" * 50}\n{"-" * 50}\n")
 
-    print(f"\nLoading model `squad_baseline` from directory {train_dir}")
-    model = load_gpt2_model(train_dir, "squad_baseline")
-    model.compile()
+    # print(f"\nLoading model `squad_baseline` from directory {train_dir}")
+    # model = load_gpt2_model(train_dir, "squad_baseline")
+    # model.compile()
 
-    evaluate(model, data_loaders["squad"][2])
+    # evaluate(model, data_loaders["squad"][2])
 
-    print("\nTraining `squad` baseline on `ag_news`")
-    train(model,
-        dropout_rate=0.1,
-        learning_rate=1e-4,
-        epochs=2,
-        data_loaders=data_loaders["ag_news"],
-        train_dir=train_dir
-    )
+    # print("\nTraining `squad` baseline on `ag_news`")
+    # train(model,
+    #     dropout_rate=0.1,
+    #     learning_rate=1e-4,
+    #     epochs=2,
+    #     data_loaders=data_loaders["ag_news"],
+    #     train_dir=train_dir
+    # )
 
-    print("\nRe-evaluating model on `squad`")
-    evaluate(model, data_loaders["squad"][2])
+    # print("\nRe-evaluating model on `squad`")
+    # evaluate(model, data_loaders["squad"][2])
 
     #---------------------------------------------------------------
 
@@ -215,25 +212,25 @@ def train_sequential(train_dir, data_loaders):
 
     #---------------------------------------------------------------
 
-    print(f"\n{"-" * 50}\n{"-" * 50}\n")
+    # print(f"\n{"-" * 50}\n{"-" * 50}\n")
 
-    print(f"\nLoading model `wikilarge_baseline` from directory {train_dir}")
-    model = load_gpt2_model(train_dir, "wikilarge_baseline")
+    # print(f"\nLoading model `wikilarge_baseline` from directory {train_dir}")
+    # model = load_gpt2_model(train_dir, "wikilarge_baseline")
 
-    model.compile()
-    evaluate(model, data_loaders["wikilarge"][2])
+    # model.compile()
+    # evaluate(model, data_loaders["wikilarge"][2])
 
-    print("\nTraining `wikilarge` baseline on `ag_news`")
-    train(model,
-        dropout_rate=0.1,
-        learning_rate=1e-4,
-        epochs=2,
-        data_loaders=data_loaders["ag_news"],
-        train_dir=train_dir
-    )
+    # print("\nTraining `wikilarge` baseline on `ag_news`")
+    # train(model,
+    #     dropout_rate=0.1,
+    #     learning_rate=1e-4,
+    #     epochs=2,
+    #     data_loaders=data_loaders["ag_news"],
+    #     train_dir=train_dir
+    # )
 
-    print("\nRe-evaluating model on `wikilarge")
-    evaluate(model, data_loaders["wikilarge"][2])
+    # print("\nRe-evaluating model on `wikilarge")
+    # evaluate(model, data_loaders["wikilarge"][2])
 
    #---------------------------------------------------------------
 
@@ -258,15 +255,20 @@ def train_sequential(train_dir, data_loaders):
     evaluate(model, data_loaders["ag_news"][2])
 
 
-def train_model(project_root, model_size="124M", train_dir="trained_models_124M", run=None):
+def train_model(project_root, model_size="124M", run="baseline"):
 
     if not os.path.isdir(project_root):
         raise FileNotFoundError(f"Unable to find project root directory {project_root}")
 
-    train_dir = os.path.join(project_root, train_dir)
+    train_dir = os.path.join(project_root, f"gpt2_{model_size}", "trained_models")
     os.makedirs(train_dir, exist_ok=True)
 
-    openai_filepath = os.path.join(project_root, "openai_weights", f"openai_weights_gpt2_{model_size}.npz")
+    openai_filepath = os.path.join(
+        project_root,
+        f"gpt2_{model_size}",
+        "pretrained_weights",
+        f"openai_weights_gpt2_{model_size}.npz"
+    )
 
     data_loaders = {}
     dataset_root = os.path.join(project_root, "datasets")
@@ -302,21 +304,19 @@ if __name__ == "__main__":
         "--project_root",
         help="Project root directory",
         required=True,
-        type=str,
-        default=None
+        type=str
     )
     parser.add_argument(
         "--model_size",
         help="Model size, one of '124M', '355M', '774M', '1542M'"
         type=str,
-        default='124M'
+        default="124M"
     )
     parser.add_argument(
-        '--run',
-        help="Training run, one of 'baseline', 'sequential_1', 'sequential_2'"
-        required=True,
+        "--run",
+        help="Training run, either 'baseline' or 'sequential'"
         type=str,
-        default='baseline'
+        default="baseline"
     )
  
     args = parser.parse_args()

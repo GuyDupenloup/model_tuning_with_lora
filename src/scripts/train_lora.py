@@ -2,12 +2,12 @@
 # Licensed under the MIT License. See LICENSE file for details.
 
 import os
-from timeit import default_timer as timer
-from datetime import timedelta
+import argparse
 import tensorflow as tf
 
 from utils.model_utils import create_gpt2_language_model, print_model_variables, load_openai_gpt2_weights
 from utils.dataset_utils import create_data_loaders
+
 
 def evaluate(model, test_ds):
 
@@ -18,16 +18,16 @@ def evaluate(model, test_ds):
     print(f"  perplexity: {perplexity:.4f}")
 
 
-def train_alpaca_adapter(model, data_loaders):
+def train_squad_adapter(model, data_loaders):
 
     model.set_dropout_rate(0.1)
 
-    steps_per_epoch = 2600
-    epochs = 7
+    steps_per_epoch = 5474
+    epochs = 2
     total_steps = steps_per_epoch * epochs 
 
     warmup_steps = 1000
-    peak_lr = 1e-3   # 5e-4
+    peak_lr = 1e-3
     final_lr = 1e-5
 
     lr_schedule = tf.keras.optimizers.schedules.CosineDecay(
@@ -44,16 +44,11 @@ def train_alpaca_adapter(model, data_loaders):
     train_ds, val_ds, test_ds = data_loaders
 
     # Train the model
-    start_time = timer()
     _ = model.fit(
         train_ds,
         validation_data=val_ds,
         epochs=epochs
     )
-    end_time = timer()
-
-    train_run_time = int(end_time - start_time)
-    print("Training runtime: " + str(timedelta(seconds=train_run_time))) 
 
     evaluate(model, test_ds)
 
@@ -84,16 +79,11 @@ def train_wikilarge_adapter(model, data_loaders):
     train_ds, val_ds, test_ds = data_loaders
 
     # Train the model
-    start_time = timer()
     _ = model.fit(
         train_ds,
         validation_data=val_ds,
         epochs=epochs
     )
-    end_time = timer()
-
-    train_run_time = int(end_time - start_time)
-    print("Training runtime: " + str(timedelta(seconds=train_run_time))) 
 
     evaluate(model, test_ds)
 
@@ -108,16 +98,11 @@ def train_ag_news_adapter(model, data_loaders):
     train_ds, val_ds, test_ds = data_loaders
 
     # Train the model
-    start_time = timer()
     _ = model.fit(
         train_ds,
         validation_data=val_ds,
         epochs=2
     )
-    end_time = timer()
-
-    train_run_time = int(end_time - start_time)
-    print("Training runtime: " + str(timedelta(seconds=train_run_time))) 
 
     evaluate(model, test_ds)
 
@@ -135,8 +120,8 @@ def train_model(project_root, model_size):
     data_loaders = {}
     dataset_root = os.path.join(project_root, "datasets")
 
-    data_loaders["alpaca"], _ = create_data_loaders(
-        os.path.join(dataset_root, "alpaca"),
+    data_loaders["squad"], _ = create_data_loaders(
+        os.path.join(dataset_root, "squad"),
         batch_size=16
     )
     data_loaders["wikilarge"], _ = create_data_loaders(
@@ -147,74 +132,76 @@ def train_model(project_root, model_size):
         os.path.join(dataset_root, "ag_news"),
         batch_size=16
     )
-
+    
+    print(f"\nCreating gpt-2 model `{model_size}`")
     lora_config = {
         "num_adapters": 3,
         "rank": (8, 8, 8),
         "alpha": (16, 16, 16),
-        "tasks": {
-            "answer questions": 0,
-            "simplify text": 1,
-            "classify news": 2
-        }
+        "tasks": ("answer question", "simplify text", "classify news")
     }
-
-    print(f"\nCreating gpt-2 model `{model_size}`")
     model = create_gpt2_language_model(
         model_size,
         lora_config=lora_config
     )
+
     load_openai_gpt2_weights(model, openai_filepath)
 
-    alpaca_adapter = 0
-    wikilarge_adapter = 1
-    ag_news_adapter = 2
+    #---------------------------------------------
 
-    print(f"\nTraining LoRA adapter #{alpaca_adapter} on `alpaca`")
-    model.select_adapter(alpaca_adapter)
+    adapter = model.lora_adapter_tasks["answer question"]
+    print(f"\nTraining LoRA adapter #{adapter} on `squad` dataset")
+    
+    model.activate_adapter(adapter)
     model.lora_freeze()
-
     print_model_variables(model)
 
-    train_alpaca_adapter(
-        model,
-        data_loaders=data_loaders["alpaca"]
+    train_squad_adapter(model, data_loaders["squad"])
+    model.save(train_dir, "squad_lora")
+
+    #---------------------------------------------
+
+    adapter_idx = model.lora_adapter_tasks["simplify text"]
+    print(f"\nTraining LoRA adapter #{adapter_idx} on `wikilarge` dataset")
+    
+    model.activate_adapter(adapter_idx)
+    model.lora_freeze()
+    print_model_variables(model)
+
+    train_wikilarge_adapter(model, data_loaders["wikilarge"])
+    model.save(train_dir, "squad_wikilarge_lora")
+
+    #---------------------------------------------
+
+    adapter_idx = model.lora_adapter_tasks["classify news"]
+    print(f"\nTraining LoRA adapter #{adapter_idx} on `ag_news` dataset")
+
+    model.activate_adapter(adapter_idx)
+    model.lora_freeze()
+    print_model_variables(model)
+
+    train_ag_news_adapter(model, data_loaders["ag_news"])
+    model.save(train_dir, "lora_adapters")
+
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    model.save(train_dir, "alpaca_lora_32")
 
-    # print(f"\nTraining LoRA adapter #{wikilarge_adapter} on `wikilarge`")
-    # model.select_adapter(wikilarge_adapter)
-    # model.lora_freeze()
+    parser.add_argument(
+        "--project_root",
+        help="Project root directory",
+        required=True,
+        type=str
+    )
+    parser.add_argument(
+        "--model_size",
+        help="Model size, one of '124M', '355M', '774M', '1542M'"
+        type=str,
+        default="124M"
+    )
 
-    # print_model_variables(model)
-
-    # train_wikilarge_adapter(
-    #     model,
-    #     data_loaders=data_loaders["wikilarge"]
-    # )
-
-    # print(f"\nTraining LoRA adapter #{ag_news_adapter} on `ag_news`")
-    # model.select_adapter(ag_news_adapter)
-    # model.lora_freeze()
-
-    # print_model_variables(model)
-
-    # train_ag_news_adapter(
-    #     model,
-    #     data_loaders=data_loaders["ag_news"]
-    # )
-
-    # model.save(train_dir, "lora")
-    
-    
-# project_root = "/content/drive/MyDrive/project"
-project_root = "../../project"
-model_size = "124M"
-
-from google.colab import drive
-drive.mount('/content/drive')
-
-train_model(
-    project_root,
-    model_size
-)
+    train_model(args.project_root, args.model_size)

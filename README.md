@@ -13,20 +13,21 @@ In this project, I experimented with tuning a GPT-2 model for the following appl
 - Text simplification using the *wikilarge* dataset (the cleaned version of it)
 - News classification using the *ag_news* dataset
 
-My goal was twofold:
+My goals were as follows:
 
-1. Create a GPT-2 model with built-in LoRA adapters, along with the full pipeline required to train and evaluate models, and manage adapters.
+1. Create a GPT-2 model with built-in LoRA adapters, along with the full pipeline required to train and evaluate models, and manage the adapters.
 
-2. Get hands-on experience with tuning a model to perform multiple tasks, comparing sequential fine-tuning of the same model and LoRA adapters.
+2. Get hands-on experience with fine-tuning a model to perform multiple tasks, comparing sequential fine-tuning of the same model and multiple LoRA adapters.
 
-The code I wrote to conduct experiments was designed to be straightforward to run, with hardcoded file and flow handling. Although the objective was not to create a configurable environment, it can be easily extended or modified to support additional tasks and datasets. Many components of the code are modular and reusable across projects, including dataset preparation, data loaders, training routines, and text generation utilities.
+3. Run prompts through the model with LoRA adapters and analyze results.
 
+The code I wrote to conduct experiments was designed to be straightforward to run, with hardcoded directory structure, file names, and flow handling. Although the objective was not to create a configurable environment, it can be easily extended or modified to support additional tasks and datasets. Many components of the code are modular and reusable across projects, including dataset preparation, data loaders, training routines, and text generation utilities.
 
 ## 2. Project setup
 
 ### 2.1 Source code
 
-The source code for this project is in the *./src* directory and is organized as shown below.
+The source code for this project is in the **./src** directory and is organized as shown below.
 
 ```
     src
@@ -36,30 +37,29 @@ The source code for this project is in the *./src* directory and is organized as
      |     └── gpt2_language_model.py      # GPT-2 language model (base model with LM head)
      |
      ├── utils
-     |     ├── dataset_utils.py            # Format prompts, export datasets to TFRecords, create data loaders
-     |     ├── model_utils.py              # Create models, load OpenAI weights, get model summaries
+     |     ├── dataset_utils.py            # Export datasets to TFRecords, create data loaders
+     |     ├── model_utils.py              # Create and load models, get model summaries, load OpenAI weights
      |     └── gen_text.py                 # Generate texts from prompts
      |
      └── scripts
-           |
-           ├── squad_dataset.py            # Preprocess `SQuAD` dataset and export to TFRecords
-           ├── wikilarge_dataset.py        # Prepare `wikilarge` dataset and export to TFRecords
-           ├── ag_news_dataset.py          # Preprocess `ag_news` dataset and export to TFRecords
+           ├── squad_dataset.py            # Preprocess SQuAD dataset and export to TFRecords
+           ├── wikilarge_dataset.py        # Prepare`wikilarge dataset and export to TFRecords
+           ├── ag_news_dataset.py          # Preprocess ag_news dataset and export to TFRecords
            ├── openai_weights.py           # Get OpenAI GPT-2 model weights and save them to numpy arrays
            ├── train.py                    # Train models independently or sequentially
-           ├── train_lora.py               # Train a model using LoRA adapters
-           └── test.py                     # Test prompts using LoRA models
+           ├── train_lora.py               # Train models using LoRA adapters
+           └── test_prompts.py             # Load a trained model with LoRA adapters and run prompts
 ```
 
 ### 2.2 Python packages
 
-I used the *transformers* package from Hugging Face to get OpenAI GPT-2 weights. Using this package requires version 2.14.1 of TensorFlow, or older. The packages I used are listed in file *requirements_1.txt*.
+I used the *transformers* package from Hugging Face to get OpenAI GPT-2 weights. Using this package requires TensorFlow version 2.14.1 or older. The packages I used are listed in file **requirements_1.txt**.
 
-Once extracted from the Hugging Face model, OpenAI weights are saved to numpy arrays. Then, you can switch to more recent versions of TensorFlow to train, evaluate and test the models. The packages for that I used are listed in file *requirements_2.txt*.
+Once extracted from the Hugging Face model, weights are saved to numpy arrays. Then, you can switch to more recent versions of TensorFlow to train, evaluate and test the models. The packages I used for that are listed in file **requirements_2.txt**.
 
 ### 2.3 Python search path
 
-To run the scripts, you need to add the *src* directory path to the PYTHONPATH environment variable that sets the search path for Python, as shown below:
+To run the scripts, you need to add the **src** directory path to the PYTHONPATH environment variable that sets the search path for Python, as shown below:
 
 ```bash
 # Linux
@@ -73,90 +73,94 @@ set PYTHONPATH=%PYTHONPATH%;C:\mypath\src
 
 ### 3.1 Directory structure and files
 
-When you prepare the datasets and train the models, scripts will create the directory structure and files shown below. The diagram only shows directories and files for the 124M model.
+When you prepare the datasets and train the models, directories and files will get created under a **project root** directory as shown below.
+
+The diagram only shows directories and files that are created when using the 124M model size. If you use a different size, for example 355M, a directory "gpt2_355m" will be created under <project root> with the same structure as shown on the diagram.
+
+Datasets are preprocessed and exported to TFRecords.
+
+Each saved model consists of two files:
+- a JSON configuration file used to recreate the model
+- a weights file to load into the model
 
 ```
 < project root >
      |     
      ├── datasets
      |     |
-     |     ├── squad                          # Created by script `squad_dataset.py`
+     |     ├── squad                           # Created by script `squad_dataset.py`
      |     |     |
      |     |     ├── metadata.json
-     |     |     ├── train.tfrecord
-     |     |     ├── val.tfrecord
-     |     |     └── test.tfrecord
+     |     |     └── train.tfrecord, val.tfrecord, test.tfrecord
      |     |
      |     ├── wikilarge                       # Created by script `wikilarge_dataset.py`
      |     |     |
      |     |     ├── metadata.json
-     |     |     ├── train.tfrecord
-     |     |     ├── val.tfrecord
-     |     |     └── test.tfrecord
+     |     |     └── train.tfrecord, val.tfrecord, test.tfrecord
      |     |
      |     └── ag_news                         # Created by script `ag_news_dataset.py`
-     |     |     |
-     |     |     ├── metadata.json
-     |     |     ├── train.tfrecord
-     |     |     ├── val.tfrecord
-     |     |     └── test.tfrecord
+     |           |
+     |           ├── metadata.json
+     |           └── train.tfrecord, val.tfrecord, test.tfrecord
      |
-     ├── openai_weights                        # Created by script `openai_weights.py`
-     |      |
-     |      └── openai_weights_gpt2_124M.npz
-     |
-     └── trained_models_124M
-            |
-            ├── baseline                       # Created by script `train.py`
-            |     ├── squad_baseline.json
-            |     ├── squad_baseline.weights.h5
-            |     ├── wikilarge_baseline.json
-            |     ├── wikilarge_baseline.weights.h5
-            |     ├── ag_news_baseline.json
-            |     └── ag_news_baseline.weights.h5
-            |
-            ├── sequential                      # Created by script `train.py`
-            |     ├── sequential_1.json
-            |     ├── sequential_1.weights.h5
-            |     ├── sequential_2.json
-            |     └── sequential_2.weights.h5
-            | 
-            └── lora                            # Created by script `train_lora.py`
-                  ├── lora.json
-                  └── lora.weights.h5
+     └── gpt2_124M
+           |
+           ├── pretrained_weights
+           |        |
+           |        └── openai_weights_gpt2_124M.npz           # Created by script `openai_weights.py`
+           |
+           ├── trained_models
+           |        |
+           |        ├── baseline                               # Created by script `train.py`
+           |        |     ├── squad_baseline.json, squad_baseline.weights.h5
+           |        |     ├── wikilarge_baseline.json, wikilarge_baseline.weights.h5
+           |        |     └── ag_news_baseline.json, ag_news_baseline.weights.h5
+           |        |      
+           |        └── lora_adapters                          # Created by script `train_lora.py`
+           |              |
+           |              └── lora_adapters.json, lora_adapters.weights.h5
+           |
+           └── prompt_tests
+                    |
+                    ├── example_prompts.json
+                    └── model_responses.txt                    # Created by script `test_prompts.py`
 ```
 
 ### 3.2 Running the project scripts
 
-To execute the project, run the scripts that are in the *./src/scripts* directory as shown below.
+To execute the project, run the scripts that are in the **src/scripts** directory as shown below.
 
 ```bash
+
 # Step 1: create the project root directory
 export PROJECT=/home/user/myproject
 mkdir $PROJECT
 
-# Step 2: export OpenAI weights to numpy arrays
-python openai_weights.py --model_size 124M --weights_filepath $PROJECT/openai_weights/openai_weights_gpt2_124M.npz
+# Step 2: Go to the scripts directory
+cd src/scripts
 
 # Step 3: prepare the datasets
 python squad_dataset.py --project_root $PROJECT
 python wikilarge_dataset.py --project_root $PROJECT
 python ag_news_dataset.py --project_root $PROJECT
 
-# Step 4: run baseline trainings (independent training of 3 different models)
+# Step 4: export OpenAI weights to numpy arrays
+python openai_weights.py --model_size 124M --project_root $PROJECT
+
+# Step 5: run baseline trainings (independent training of three different models)
 python train.py --model_size 124M --project_root $PROJECT --run baseline
 
-# Step 5: run sequential trainings of the same model
+# Step 6: run sequential trainings of the same model
 python train.py --model_size 124M --project_root $PROJECT --run sequential
 
-# Step 6: train LoRA adapters
+# Step 7: train LoRA adapters
 python train_lora.py --model_size 124M --project_root $PROJECT
 
-# Step 7: test example prompts with LoRA model
-python test_prompt.py --project_root $PROJECT --model_dir <directory where the model was saved> --prompt <your prompt here>
+# Step 8: test example prompts with LoRA model
+python test_prompt.py --project_root $PROJECT --model_name <name of the model> --prompt_filepath <JSON examples file>
 ```
 
-If you are not interested in the sequential training experiments, you can skip steps 4 and 5.
+If you are not interested in the sequential training experiments, you can skip steps 5 and 6.
 
 
 ## 4. GPT-2 model enhancements
@@ -165,9 +169,9 @@ I made the following enhancements to my original GPT-2 model:
 
 - Built-in Low-Rank Adaptation (LoRA) layers inside the multi-head attention blocks and feed-forward network
 
-- Mechanism to make OpenAI weights loadable into the model in the presence of LoRA adapters
+- Mechanism to load OpenAI pretrained weights into the model when LoRA adapters are present
 
-- Loss mask to only take into account the model output part of the prompt when computing the loss
+- Loss mask to exclude the prompt from loss calculation, keeping only the output part
 
 - Language modelling head that includes loss and metrics calculation, and LoRA adapters management
 
@@ -175,17 +179,18 @@ For LoRA adapters, I used the architecture described in the original paper publi
 
 [LoRA: Low-Rank Adaptation of Large Language Models.](https://arxiv.org/abs/2106.09685).
 
-I also added LoRA layers to the feed-forward network as they can contribute significantly to the model performance. Any number of adapters can be inserted in the model. Each of them includes a dropout layer.
-
 
 ## 5. Model tasks, datasets and prompts
 
-The prompts are formatted to handle the different tasks the model will have to perform. The first part "### Task: " specifies the task to perform.
+### 5.1 Loss and attention masks
 
-I used tiktoken for tokenization. As it has no dedicated < EOS > character, I used the pad token 50256 to mark the end of the model response. It appears as *<|endoftext|>* in the examples below.
+All the prompts start with a "### Task: " header that indicates the task the model has to perform. Tasks include "answer question" when training and evaluating with the SQuAD dataset, "simplify text" with Wikilarge, and "classify news" with ag_news. 
 
+I used tiktoken for tokenization which does not have a dedicated <EOS> token, so I used the pad token 50256 as the end of model answer marker.
 
-### 5.1 SQuAD dataset
+The loss mask hides the entire prompt for loss calculation, only keeping the model answer. This way, the model is only rewarded on its answer, not on the prompt. The attention masks hides all the pad tokens that come after the ending pad token used as the <EOS> token. Note that it is crucial that the loss mask and attention mask both keep the ending pad token as it informs the model of where to end its answer.
+
+### 5.2 SQuAD dataset
 
 Examples from the SQaD dataset are formatted as shown below. The prompt ends after "### Answer: " and is followed by the model answer.
 
@@ -199,16 +204,9 @@ Examples from the SQaD dataset are formatted as shown below. The prompt ends aft
 ### Answer: I Believe<|endoftext|>
 ```
 
-During training:
+The loss mask only keeps what comes after "### Answer: ".
 
-- The loss mask excludes the prompt from loss calculation and only keeps the model answer part, which is "I Believe<|endoftext|>" in the example above. This forces the model to focus on the answer.
-
-- The attention mask uncovers the prompt and the model answer, and masks the padding tokens that comes afterwards to avoid that the model attends to them.
-
-- Both the loss mask and attention mask uncover the padding token that marks the end of the answer, as the model must be made aware that this is where the answer ends.
-
-
-### 5.2 Wikilarge dataset
+### 5.3 Wikilarge dataset
 
 Examples from the *wikilarge* dataset are formatted as shown below. The prompt ends after "### Simplified: " and is followed by the model answer.
 
@@ -220,10 +218,10 @@ Examples from the *wikilarge* dataset are formatted as shown below. The prompt e
 ### Simplified: Historians say he led the change of New South Wales from a penal colony to a free settlement .<|endoftext|>
 ```
 
-The loss mask only keeps what comes after "### Simplified: ", i.e. the model answer.
+The loss mask only keeps what comes after "### Simplified: ".
 
 
-### 5.3 ag_news dataset
+### 5.4 ag_news dataset
 
 Examples from the *ag_news* dataset are formatted as shown below. The prompt ends after "### Label: " and is followed the model answer, which is either "Business', "Sports", "Sci/Tech", or "World".
 
@@ -235,18 +233,24 @@ Examples from the *ag_news* dataset are formatted as shown below. The prompt end
 ### Label: Business<|endoftext|>
 ```
 
+The loss mask only keeps what comes after "### Label: ".
+
+
 ## 6. Model training
 
-### 6.1 Training setup
+### 6.1 Metrics
 
-I only ran the smallest GPT-2 model that has 124M parameters.
-
-To evaluate the performance of the models, I used *label-level exact match accuracy* for the *SQuAD* and *ag_news* datasets, and perplexity for the *wikilarge* dataset.
-
-In the result tables below, accuracy values was multiplied by 100.
+To evaluate the performance of the models, I used *exact-match accuracy* for the *SQuAD* and *ag_news* datasets, and perplexity for the *wikilarge* dataset.
 
 
 ### 6.2 Baseline training
+
+Before training a model with LoRA adapters, I needed a baseline to serve as a performance reference.
+
+Therefore, I created three GPT-2 models that I trained independently on respectively SQuAD, Wikilarge, and ag_news. I did not freeze any layers for these trainings, so all pretrained weights were trainable. It may be possible to obtain better results but freezing some layers.
+
+The table below summarizes the results I obtained with these baseline trainings.
+
 
 |   dataset           |  Test set before training  |  Training set    |  Validation set  |  Test set   |
 |---------------------|----------------------------|------------------|------------------|-------------|
@@ -255,12 +259,15 @@ In the result tables below, accuracy values was multiplied by 100.
 |   ag_news           |         0.0                |       94.4       |      94.2        |   92.1      |   <= good
 
 
-
 ### 6.3. Sequential training
 
-Having established a baseline, we know what the model can do best on each dataset individually. The next step is to determine whether the model can perform at the same level when it is trained sequentially on the three datasets, so that it is perform the three tasks we task we want: answering a question, simplifying a text, and classifying news.
+Having established a baseline, we know what the model is able to do on each dataset individually.
 
-To determine that, I did a number of experiments. First, a model trained on a given dataset is loaded, i.e. what I called the "baseline model". Then, the model is trained on another dataset. Finally, the model is re-evaluated on the dataset used for the baseline. If the model performs well on the test sets of the two datasets, then it is capable of handling both tasks.
+We want to have a model that is fine-tuned on the three datasets. The next step is to determine how the model performs when it is trained sequentially on the three datasets.
+
+I ran a number of experiments. First, a model trained on a given dataset, i.e. what I called the "baseline model", is loaded. Then, it is trained on another dataset. Finally, the model is re-evaluated on the dataset used for the baseline. If the model performs well on the test sets of the two datasets, then it is capable of handling both tasks.
+
+The results I obtained with these experiments are summarized in the tables below.
 
 
 |   Experiment #1                                   |  Train set  |  Validation set  |  Test set    |
@@ -305,13 +312,13 @@ To determine that, I did a number of experiments. First, a model trained on a gi
 |   3. Re-evaluate model on ag_news                 |             |                  |    4.17      |
 
 
-All these experiments show that training the same model sequentially on the three datasets is not a viable solution.
+All these experiments show that attempting to fine-tune the same model sequentially on the three datasets is not a viable solution.
 
-For example in experiment #3, the model trained on SQuAD starting from OpenAI weights (the baseline) has a test set accuracy of 45.0%. Then, when the model is trained on the ag_news dataset, it reaches the ag_news baseline accuracy at ~94.0%. But when re-evaluating the model on SQuAD, accuracy has dropped from 45.0% to 0%. In other words, from the SQuAD perspective, the model went back to to where it was before training. This is a case of so called "catastrophic forgetting".
+For example in experiment #3, the model trained on SQuAD starting from pretrained weights (the baseline) has a test set accuracy of 45.8%. Then, when the model is trained on the ag_news dataset, it reaches the ag_news baseline accuracy at ~94.0%. But when re-evaluating the model on SQuAD, accuracy has dropped from 45.0% to 0%. In other words, from the SQuAD dataset perspective, the model went back to where it was before training. This is a case of so-called *catastrophic forgetting*.
 
 ### 6.4 LoRA adapters training
 
-Next, i trained three LoRA adapters, each one being responsible for a given task.
+Next, I trained three LoRA adapters, each one being responsible for a given task.
 
 The results I obtained are summarized in the table below.
 
@@ -322,38 +329,36 @@ The results I obtained are summarized in the table below.
 |   wikilarge         |  1.1M (rank=8)         |    4.15     |   3.9507         |    3.33    |
 |   ag_news           |  1.1M (rank=8)         |    92.9     |    94.1          |    93.8    |
 
-For SQuAD, the adapter reaches 43.6% versus 45.0% for the baseline. I could come back to about the same accuracy as the baseline with larger adapters, but returns were diminishing.
-
-For wikilarge, the adapter reaches the same perplexity as the baseline.
-
-For ag_news, the adapter reaches 93.8% versus 92.4% for the baseline, so slightly better.
+For SQuAD, the adapter reaches 43.6% versus 45.8% for the baseline. For wikilarge, the adapter reaches the same perplexity as the baseline. For ag_news, the adapter reaches 93.8% versus 92.4% for the baseline, so slightly better.
 
 Note that all adapters are more or less under-fitted, which is probably a consequence of the small number of trainable parameters of each adapter.
 
 Using these three adapters, the model performs at about the same levels as the baselines. They only add 4.4M parameters to the initial model that has 124M parameters, representing only 3.5%. This is quite remarkable and demonstrates the effectiveness of the LoRA approach.
 
-Additionally, the LoRA adapters don't alter OpenAI's parameters. If all adapters are disconnected from the model, it performs like it does when OpenAI parameters are not tuned for a given application.
+Additionally, the LoRA adapters don't alter OpenAI's parameters. If all adapters are disabled, the model reverts to the original pretrained GPT-2 behavior.
 
 
 ## 7. Testing and analyzing prompt responses
 
 ### 7.1 Testing prompts
-For each task, I tested the model with LoRA adapters using 50 examples randomly extracted from the test sets.
 
-The examples are in file example_prompts.json.
+I tested the model with LoRA adapters, using 50 examples for each adapter. I extracted the samples from the dataset test sets.
 
-File lora_responses.txt was created but script test_prompts.py that runs the prompts through the model.They include:
+File "lora_responses.txt" was created by script "test_prompts.py" that runs the prompts through the model.
+
+Each example in "lora_responses.txt" include:
+
 - A unique example ID
-- The prompt with the model response
+- The prompt followed by the model response
 - The annotation from the dataset
 
-There are a number of observations that can be made looking at prompts with their model answers. 
+These examples provide a good qualitative understanding of the model's strengths and limitations.
 
 ### 7.2 Question answering (SQuAD test set)
 
 #### Accuracy metric
 
-A first, obvious observation is that the exact-match accuracy metric is often too crude to reflect the actual performance of the model, and the 45% accuracy I obtained under-estimates the model.
+One obvious observation is that the exact-match accuracy metric is often too crude to reflect the actual performance of the model, and the 45% accuracy I obtained under-estimates the model.
 
 The model does not get any credit for answers that are correct but formulated differently than the annotations, answers that are more or less verbose than the annotation, and answers that are correct but incomplete.
 
@@ -363,13 +368,13 @@ Prompt IDs 10, 19, 8 and 21 are examples of this issue.
 
 The model demonstrates the following strengths:
 
-- Factual recall on clean questions. IDs 4, 5, 22, 24, 25, 26, 32, 34, 35, 39 are all correct and well-formed. The model handles straightforward who/what/when questions reliably.
+- **Factual recall on clean questions**: IDs 4, 5, 22, 24, 25, 26, 32, 34, 35, 39 are all correct and well-formed. The model handles straightforward who/what/when questions reliably.
 
-- Appropriate answer brevity. The model generally extracts compact spans and avoids copying entire sentences. For example in ID 19, it gives a straight-to-the-point answer while the annotation is too verbose. However, it sometimes cuts off its answer too soon, like in ID 24 where it answers "16th" instead of "16th century", or in ID 8 where it answers "go home" instead of "go home and change".
+- **Appropriate answer brevity**: The model generally extracts compact spans and avoids copying entire sentences. For example in ID 19, it gives a straight-to-the-point answer while the annotation is too verbose. However, it sometimes cuts off its answer too soon, like in ID 24 where it answers "16th" instead of "16th century", or in ID 8 where it answers "go home" instead of "go home and change".
 
-- Semantic understanding. ID 29 ("separation" for "fragmentation") and ID 33 show that the model grasps meaning even when it doesn't match the annotation exactly.
+- **Semantic understanding**: ID 29 ("separation" for "fragmentation") and ID 33 show that the model grasps meaning even when it doesn't match the annotation exactly.
 
-- Robust to varied writing styles and text structures. Whether the context is written in a scientific, journalistic, or historical register, it can still locate relevant spans. 
+- **Robust to varied writing styles and text structures**: Whether the context is written in a scientific, journalistic, or historical register, the model can still locate relevant spans. 
 
 #### Confusion between entities of the same type
 
@@ -381,7 +386,7 @@ For example in ID 2, the model picks the "KOA" radio station instead of "KRFX". 
 
 In ID 18, the context includes "about twice as much (14.6 mg·L−1) dissolves at 0 °C than at 20 °C.". When asked "How much more oxygen dissolves at 0 degrees C than at 20 degrees C?", the model answers "14.6 mg·L−1" instead of "twice".
 
-The model fails on this question that only requires basic counting and logic. This weakness may be a consequence of the limited model capacity (only 124M parameters).
+The model fails on this question that only requires basic counting and logic. This weakness may be a consequence of the limited model capacity.
 
 
 ### 7.3 Text simplification (Wikilarge test set)
@@ -390,15 +395,17 @@ The model fails on this question that only requires basic counting and logic. Th
 
 The model demonstrates the following strengths:
 
-- Minor rephrasing and trimming. The model handles simple simplifications well, removing text between parenthesis, introductory phrases, or redundant clauses without distorting meaning. IDs 54, 62, 63, 72, 84, 97 are clean examples where the output is fluent and faithful to the source.
+- **Minor rephrasing and trimming**: The model handles simple simplifications well, removing text between parenthesis, introductory phrases, or redundant clauses without distorting meaning. IDs 54, 62, 63, 72, 84, 97 are clean examples where the output is fluent and faithful to the source.
 
-- Vocabulary substitution. The model occasionally replaces words with simpler synonyms appropriately. In ID 70, "tends to be unaware" becomes "is unaware", and in ID 91, "regions" becomes "areas" and "substantial" becomes "significant".
+- **Vocabulary substitution**: The model occasionally replaces words with simpler synonyms appropriately. In ID 70, "tends to be unaware" becomes "is unaware", and in ID 91, "regions" becomes "areas" and "substantial" becomes "significant".
 
-- Sentence splitting. In ID 60, the model correctly splits a complex sentence into two simpler ones, which is a legitimate simplification strategy.
+- **Sentence splitting**: In ID 60, the model correctly splits a complex sentence into two simpler ones, which is a legitimate simplification strategy.
 
 #### Hallucinations
 
-The model also frequently "hallucinates", generating content that is entirely absent from the source text:
+The model frequently "hallucinates", generating content that is entirely absent from the source text.
+
+For example:
 
 - ID 52: adds "in a car accident" with no basis in the source.
 - ID 55: invents "1982 American Athletic Conference championship".
@@ -408,7 +415,6 @@ The model also frequently "hallucinates", generating content that is entirely ab
 - ID 92: adds "in Israel" with no basis.
 - ID 98: replaces "Brighton" with "Blaze".
 
-This critical weakness affects a large portion of outputs.
 
 #### Meaning-altering omissions
 
@@ -424,43 +430,33 @@ In ID 93, the model changes "forty-nine" to "thirty-nine" with no justification,
 
 #### Copying without simplifying
 
-In IDs 87 and 95, the model outputs the source sentence verbatim, performing no simplification at all.
-Loss of referential clarity. In ID 79, "He is buried there" loses the specific location entirely, making the sentence less informative than the original.
+**No simplification**: In IDs 87 and 95, the model outputs the source sentence verbatim, performing no simplification at all.
 
-Overall, the model is far less reliable than the SQuAD model. While it handles minor edits competently, its hallucination rate is high enough to make it untrustworthy for any real simplification task.
+**Loss of referential clarity**: In ID 79, "He is buried there" loses the specific location entirely, making the sentence less informative than the original.
+
 
 ### 7.4 News classification (ag_news test set)
 
 The model demonstrates the following strengths:
 
-- High overall accuracy. The model gets the vast majority of labels correct. Only a handful of errors are visible across 50 examples, which suggests the model has learned the four-class classification task (World, Business, Sports, Sci/Tech) quite well.
+- **High overall accuracy**: The model gets the vast majority of labels correct. Only a handful of errors are visible across 50 examples, which suggests the model has learned the four-class classification task (World, Business, Sports, Sci/Tech) quite well.
 
-- Handles ambiguous cases reasonably. Some articles sit at the boundary between two categories, and the model's errors are understandable rather than random:
+- **Handles ambiguous cases reasonably**: Some articles sit at the boundary between two categories, and the model's errors are understandable rather than random:
 
       - ID 102: the model answers "Business" for a news article about Cisco acquiring a company for $200 million. This is a defensible answer even though the annotation is "Sci/Tech", since the article is primarily about a financial transaction.
       - ID 105: the model answers "Sci/Tech" for a story about a phone spoofing service, while the annotation is "Business". Again, a reasonable confusion.
       - ID 112: the model answers "Sci/Tech" for a story about a Computer Associates legal case, while the annotation is "Business". The company name likely triggered a technology association.
 
-- Robust across writing styles. The model handles headlines, wire service dispatches, and longer articles equally well, suggesting it learned category-level signals rather than surface formatting cues.
+**Robust across writing styles**: The model handles headlines, wire service dispatches, and longer articles equally well, suggesting it learned category-level signals rather than surface formatting cues.
 
 However, the model also exhibits the following weaknesses:
 
-- Business/Sci/Tech boundary confusion. The clearest failure pattern is confusing these two categories, which is unsurprising since technology companies frequently appear in business news. IDs 102, 105, and 112 all fall into this pattern.
+- **Business/Sci/Tech boundary confusion**: The clearest failure pattern is confusing these two categories, which is unsurprising since technology companies frequently appear in business news. IDs 102, 105, and 112 all fall into this pattern.
 
-- One surprising error. ID 115 ("Men, Women More Different Than Thought") is labeled "Sci/Tech" by the model but annotated as "World". This is arguably the annotation's fault rather than the model's — a research finding about gender differences fits "Sci/Tech" more naturally than "World". This echoes the exact-match accuracy problem you identified for the SQuAD model.
+### 8. Conclusion
 
-### 8. Conclusion about the abilities of the model
+This project gave me hands-on experience with the full fine-tuning pipeline for a GPT-2 model, from dataset preparation to training, evaluation, and prompt analysis.
 
-- SQuAD (Extractive QA)
+The sequential training experiments clearly illustrated the catastrophic forgetting problem: fine-tuning a single model on multiple tasks sequentially destroys previously acquired capabilities. LoRA adapters provide an efficient solution. Using three adapters totaling only 4.4M parameters (3.5% of the base model), the model achieves near-baseline performance on all three tasks simultaneously, without touching the original weights during adapter training.
 
-The model shows genuine capability on this task. It reliably extracts relevant spans for straightforward factual questions, and its errors are often minor — wrong verbosity level, slightly truncated answers, or confusion between entities of the same type. The 45% exact-match accuracy meaningfully underestimates the model's true performance due to the crudeness of the metric. The model is arguably usable for simple QA applications where answers are unambiguous and entities are not repeated in the context, though it should not be trusted for questions requiring numerical reasoning.
-
-- WikiLarge (Text Simplification)
-This is where the model fails most severely. While it handles minor edits competently — dropping redundant clauses, light vocabulary substitution — its hallucination rate is far too high for any practical use. Fabricating facts (IDs 52, 55, 57, 92, 98), altering named entities, and introducing false information make the model untrustworthy for this task. Text simplification may be an inherently harder task for a model of this size, as it requires both understanding the source sentence and generating a faithful rewrite, rather than simply extracting or classifying. GPT-2 small is not usable for this application.
-
-- AG News (News Classification)
-This is the task where the model performs best and most consistently. The four-class classification problem appears well within the model's capacity, with errors concentrated in the naturally ambiguous Business/Sci/Tech boundary. The model is arguably production-ready for this task, with the caveat that some annotation noise makes it hard to distinguish true model errors from labeling disagreements.
-
-- Overall conclusion
-The results suggest that GPT-2 small's usefulness scales inversely with task complexity. Classification, which only requires the model to map an input to a fixed label, is well within its capacity. Span extraction is manageable but imperfect. Open-ended generation, as required by text simplification, exposes the model's core limitation: it cannot reliably stay faithful to a source text while rewriting it, producing hallucinations that make it unsuitable for real-world use. For any application where factual faithfulness matters, a larger model or a different architecture would be necessary.
-
+The prompt analysis revealed that raw accuracy metrics can be misleading. The SQuAD model's ~45% exact-match accuracy underestimates its actual usefulness, while the wikilarge model's good perplexity score does not reflect a strong tendency to hallucinate. This exercise showed me how essential qualitative analysis is alongside quantitative metrics.
