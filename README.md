@@ -107,24 +107,20 @@ Each saved model consists of two files:
            |
            ├── pretrained_weights
            |        |
-           |        └── openai_weights_gpt2_124M.npz           # Created by script `openai_weights.py`
+           |        └── openai_weights_gpt2_124M.npz
            |
            ├── trained_models
            |        |
-           |        ├── baseline                               # Created by script `train.py`
-           |        |     |
-           |        |     ├── squad_baseline.json, squad_baseline.weights.h5
-           |        |     ├── wikilarge_baseline.json, wikilarge_baseline.weights.h5
-           |        |     └── ag_news_baseline.json, ag_news_baseline.weights.h5
-           |        |      
-           |        └── lora_adapters                          # Created by script `train_lora.py`
-           |              |
-           |              └── lora_adapters.json, lora_adapters.weights.h5
+           |        ├── squad_baseline.json, squad_baseline.weights.h5          # Created by script `train.py`
+           |        ├── wikilarge_baseline.json, wikilarge_baseline.weights.h5
+           |        ├── ag_news_baseline.json, ag_news_baseline.weights.h5
+           |        |
+           |        └── lora_adapters.json, lora_adapters.weights.h5            # Created by script `train_lora.py`
            |
-           └── prompt_tests
-                    |
-                    ├── example_prompts.json
-                    └── model_responses.txt                    # Created by script `test_prompts.py`
+           └── tests
+                 |
+                 ├── example_prompts.json
+                 └── model_responses.txt                        # Created by script `test_prompts.py`
 ```
 
 ### 3.2 Running the project scripts
@@ -158,7 +154,7 @@ python train.py --model_size 124M --project_root $PROJECT --run sequential
 python train_lora.py --model_size 124M --project_root $PROJECT
 
 # Step 8: test example prompts with LoRA adapters
-python test_prompts.py --model_size 124M --project_root $PROJECT
+python test_lora.py --project_root $PROJECT
 ```
 
 If you are not interested in the sequential training experiments, you can skip steps 5 and 6.
@@ -185,7 +181,7 @@ For LoRA adapters, I used the architecture described in the original paper publi
 
 ### 5.1 Loss and attention masks
 
-All the prompts start with a "### Task: " header that indicates the task the model has to perform. Tasks include "answer question" when training and evaluating with the SQuAD dataset, "simplify text" with Wikilarge, and "classify news" with ag_news. 
+All the prompts start with a "### Task: " header that indicates the task the model has to perform. Tasks include "answer question" when training and evaluating with the SQuAD dataset, "simplify text" with wikilarge, and "classify news" with ag_news. 
 
 I used **tiktoken** for tokenization which does not have a dedicated \<EOS\> token, so I used the pad token 50256 to mark the end of the model answers.
 
@@ -205,9 +201,9 @@ Examples from the SQuAD dataset are formatted as shown below. The prompt ends af
 ### Answer: I Believe<|endoftext|>
 ```
 
-### 5.3 Wikilarge dataset
+### 5.3 wikilarge dataset
 
-Examples from the Wikilarge dataset are formatted as shown below. The prompt ends after "### Simplified: " and is followed by the model answer.
+Examples from the wikilarge dataset are formatted as shown below. The prompt ends after "### Simplified: " and is followed by the model answer.
 
 ```
 ### Task: simplify text
@@ -241,7 +237,7 @@ To evaluate the performance of the models, I used *exact-match accuracy* for the
 
 Before training a model with LoRA adapters, I needed a baseline to serve as a performance reference.
 
-Therefore, I created three GPT-2 models that I trained independently on respectively SQuAD, Wikilarge, and ag_news. I did not freeze any layers for these trainings, so all the pretrained weights were trainable. It may be possible to get better results by freezing some layers.
+Therefore, I created three GPT-2 models that I trained independently on respectively SQuAD, wikilarge, and ag_news. I did not freeze any layers for these trainings, so all the pretrained weights were trainable. It may be possible to get better results by freezing some layers.
 
 The table below summarizes the results I obtained with these baseline trainings.
 
@@ -271,15 +267,15 @@ The results I obtained with these experiments are summarized in the tables below
 |   Experiment #1                                   |  Train set  |  Validation set  |  Test set    |
 |---------------------------------------------------|-------------|------------------|--------------|
 |   1. Create model and train on SQuAD              |             |                  |    45.8      |
-|   2. Train model on Wikilarge                     |  3.58       |      3.62        |    3.40      |
+|   2. Train model on wikilarge                     |  3.58       |      3.62        |    3.40      |
 |   3. Re-evaluate model on SQuAD                   |             |                  |    6.80      |
 
 
 |   Experiment #2                                   |  Train set  |  Validation set  |  Test set    |
 |---------------------------------------------------|-------------|------------------|--------------|
-|   1. Create model and train on Wikilarge          |             |                  |     3.34     |
+|   1. Create model and train on wikilarge          |             |                  |     3.34     |
 |   2. Train model on SQuAD                         |   50.5      |     46.2         |     46.2     |
-|   3. Re-evaluate model on Wikilarge               |             |                  |     7.86     |
+|   3. Re-evaluate model on wikilarge               |             |                  |     7.86     |
 
 
 |   Experiment #3                                   |  Train set  |  Validation set  |  Test set    |
@@ -298,15 +294,15 @@ The results I obtained with these experiments are summarized in the tables below
 
 |   Experiment #5                                   |  Train set  |  Validation set  |  Test set    |
 |---------------------------------------------------|-------------|------------------|--------------|
-|   1. Create model and train on Wikilarge          |             |                  |    3.34      |
+|   1. Create model and train on wikilarge          |             |                  |    3.34      |
 |   2. Train model on ag_news                       |   95.0      |       93.8       |    93.8      |
-|   3. Re-evaluate model on Wikilarge               |             |                  |    49.14     |
+|   3. Re-evaluate model on wikilarge               |             |                  |    49.14     |
 
 
 |   Experiment #6                                   |  Train set  |  Validation set  |  Test set    |
 |---------------------------------------------------|-------------|------------------|--------------|
 |   1. Create model and train on ag_news            |             |                  |    92.1      |
-|   2. Train model on Wikilarge                     |    3.62     |     3.7120       |    3.41      |
+|   2. Train model on wikilarge                     |    3.62     |     3.7120       |    3.41      |
 |   3. Re-evaluate model on ag_news                 |             |                  |    4.17      |
 
 
@@ -327,7 +323,7 @@ The results I obtained are summarized in the table below.
 |   wikilarge         |  1.1M (rank=8)         |    4.15     |   3.9507         |    3.33    |
 |   ag_news           |  1.1M (rank=8)         |    92.9     |    94.1          |    93.8    |
 
-For SQuAD, the adapter reaches 43.6% versus 45.8% for the baseline (I could get to the baseline with larger adapters, but with diminishing results). For Wikilarge, the adapter reaches the same perplexity as the baseline at ~3.3. For ag_news, the adapter achieves 93.8% versus 92.4% for the baseline.
+For SQuAD, the adapter reaches 43.6% versus 45.8% for the baseline (I could get to the baseline with larger adapters, but with diminishing results). For wikilarge, the adapter reaches the same perplexity as the baseline at ~3.3. For ag_news, the adapter achieves 93.8% versus 92.4% for the baseline.
 
 Note that all adapters are more or less under-fitted, which is probably a consequence of the small number of trainable parameters of each adapter.
 
@@ -376,7 +372,7 @@ Prompt IDs 8, 10, 19, and 21 are examples of this issue.
 
 - **Weak numerical reasoning**: In ID 18, the context includes "about twice as much (14.6 mg·L−1) dissolves at 0 °C than at 20 °C.". When asked "How much more oxygen dissolves at 0 degrees C than at 20 degrees C?", the model fails on basic logic and answers "14.6 mg·L−1" instead of "twice".
 
-### 7.3 Text simplification (Wikilarge test set)
+### 7.3 Text simplification (wikilarge test set)
 
 ### Model strengths
 

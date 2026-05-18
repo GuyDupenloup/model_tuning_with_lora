@@ -255,7 +255,7 @@ def train_sequential(train_dir, data_loaders):
     evaluate(model, data_loaders["ag_news"][2])
 
 
-def train_model(project_root, model_size="124M", run="baseline"):
+def train_model(project_root, model_size, run):
 
     if not os.path.isdir(project_root):
         raise FileNotFoundError(f"Unable to find project root directory {project_root}")
@@ -265,7 +265,7 @@ def train_model(project_root, model_size="124M", run="baseline"):
 
     openai_filepath = os.path.join(
         project_root,
-        f"gpt2_{model_size}",
+        f"gpt2_{model_size}", 
         "pretrained_weights",
         f"openai_weights_gpt2_{model_size}.npz"
     )
@@ -316,13 +316,14 @@ if __name__ == "__main__":
         "--run",
         help="Training run, either 'baseline' or 'sequential'"
         type=str,
-        default="baseline"
+        run="baseline"
     )
  
     args = parser.parse_args()
+
     train_model(
         args.project_root,
-        model_size=args.model_size,
+        args.model_size,
         run=args.run
     )
  

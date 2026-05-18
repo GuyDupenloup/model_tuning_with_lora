@@ -116,7 +116,6 @@ def generate_text(
         attention_masks = []
 
         for tokens in tokens_out:
-            # --- FIX: dynamic context instead of fixed seq_len ---
             current_tokens = tokens[-max_context_len:]
             seq_len = len(current_tokens)
 
@@ -155,7 +154,7 @@ def generate_text(
         for i in range(batch_size):
             tokens_out[i].append(next_tokens[i])
 
-        # --- OPTIONAL: early stop if all sequences hit EOS ---
+        # Early stop if all sequences hit EOS ---
         if all(t == pad_token for t in next_tokens):
             break
 

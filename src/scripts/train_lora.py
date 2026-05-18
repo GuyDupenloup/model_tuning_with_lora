@@ -22,24 +22,26 @@ def train_squad_adapter(model, data_loaders):
 
     model.set_dropout_rate(0.1)
 
-    steps_per_epoch = 5474
-    epochs = 2
-    total_steps = steps_per_epoch * epochs 
+    # steps_per_epoch = 5474
+    # epochs = 2
+    # total_steps = steps_per_epoch * epochs 
 
-    warmup_steps = 1000
-    peak_lr = 1e-3
-    final_lr = 1e-5
+    # warmup_steps = 1000
+    # peak_lr = 1e-3
+    # final_lr = 1e-5
 
-    lr_schedule = tf.keras.optimizers.schedules.CosineDecay(
-        initial_learning_rate=0.0,
-        decay_steps=total_steps,
-        alpha=final_lr / peak_lr,
-        warmup_target=peak_lr,
-        warmup_steps=warmup_steps
-    )
+    # lr_schedule = tf.keras.optimizers.schedules.CosineDecay(
+    #     initial_learning_rate=0.0,
+    #     decay_steps=total_steps,
+    #     alpha=final_lr / peak_lr,
+    #     warmup_target=peak_lr,
+    #     warmup_steps=warmup_steps
+    # )
+    # optimizer = tf.keras.optimizers.AdamW(learning_rate=lr_schedule)
 
-    optimizer = tf.keras.optimizers.AdamW(learning_rate=lr_schedule)
+    optimizer = tf.keras.optimizers.AdamW(learning_rate=1e-4)
     model.compile(optimizer=optimizer)
+    epochs = 2
 
     train_ds, val_ds, test_ds = data_loaders
 
@@ -59,7 +61,7 @@ def train_wikilarge_adapter(model, data_loaders):
 
     steps_per_epoch = 7741
     epochs = 6
-    total_steps = steps_per_epoch * epochs  # 30964
+    total_steps = steps_per_epoch * epochs
 
     warmup_steps = 1000
     peak_lr = 1e-4
@@ -112,11 +114,16 @@ def train_model(project_root, model_size):
     if not os.path.isdir(project_root):
         raise FileNotFoundError(f"Unable to find project root directory {project_root}")
     
-    train_dir = os.path.join(project_root, f"trained_lora_{model_size}")
+    train_dir = os.path.join(project_root, f"gpt2_{model_size}", "trained_models")
     os.makedirs(train_dir, exist_ok=True)
 
-    openai_filepath = os.path.join(project_root, "openai_weights", f"openai_weights_gpt2_{model_size}.npz")
-    
+    openai_filepath = os.path.join(
+        project_root,
+        f"gpt2_{model_size}", 
+        "pretrained_weights",
+        f"openai_weights_gpt2_{model_size}.npz"
+    )
+
     data_loaders = {}
     dataset_root = os.path.join(project_root, "datasets")
 
@@ -134,34 +141,34 @@ def train_model(project_root, model_size):
     )
     
     print(f"\nCreating gpt-2 model `{model_size}`")
+    adapter_tasks = ("answer question", "simplify text", "classify news")
     lora_config = {
         "num_adapters": 3,
-        "rank": (8, 8, 8),
-        "alpha": (16, 16, 16),
-        "tasks": ("answer question", "simplify text", "classify news")
+        "rank": (16, 8, 8),
+        "alpha": (32, 16, 16),
+        "tasks": adapter_tasks
     }
     model = create_gpt2_language_model(
         model_size,
         lora_config=lora_config
     )
-
     load_openai_gpt2_weights(model, openai_filepath)
 
     #---------------------------------------------
 
-    adapter = model.lora_adapter_tasks["answer question"]
-    print(f"\nTraining LoRA adapter #{adapter} on `squad` dataset")
+    adapter_idx = adapter_tasks.index("answer question")
+    print(f"\nTraining LoRA adapter #{adapter_idx} on `squad` dataset")
     
-    model.activate_adapter(adapter)
+    model.activate_adapter(adapter_idx)
     model.lora_freeze()
     print_model_variables(model)
 
     train_squad_adapter(model, data_loaders["squad"])
-    model.save(train_dir, "squad_lora")
+    model.save(train_dir, "lora_adapters_squad")
 
     #---------------------------------------------
 
-    adapter_idx = model.lora_adapter_tasks["simplify text"]
+    adapter_idx = adapter_tasks.index("simplify text")
     print(f"\nTraining LoRA adapter #{adapter_idx} on `wikilarge` dataset")
     
     model.activate_adapter(adapter_idx)
@@ -169,11 +176,11 @@ def train_model(project_root, model_size):
     print_model_variables(model)
 
     train_wikilarge_adapter(model, data_loaders["wikilarge"])
-    model.save(train_dir, "squad_wikilarge_lora")
+    model.save(train_dir, "lora_adapters_wikilarge")
 
     #---------------------------------------------
 
-    adapter_idx = model.lora_adapter_tasks["classify news"]
+    adapter_idx = adapter_tasks.index("classify news")
     print(f"\nTraining LoRA adapter #{adapter_idx} on `ag_news` dataset")
 
     model.activate_adapter(adapter_idx)
@@ -181,8 +188,9 @@ def train_model(project_root, model_size):
     print_model_variables(model)
 
     train_ag_news_adapter(model, data_loaders["ag_news"])
-    model.save(train_dir, "lora_adapters")
 
+    # Save the models with trained adapters
+    model.save(train_dir, "lora_adapters")
 
 
 if __name__ == "__main__":
@@ -199,9 +207,11 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--model_size",
-        help="Model size, one of '124M', '355M', '774M', '1542M'"
+        help="Model size, one of '124M', '355M', '774M', '1542M'",
         type=str,
         default="124M"
     )
+
+    args = parser.parse_args()
 
     train_model(args.project_root, args.model_size)
