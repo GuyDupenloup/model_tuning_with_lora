@@ -73,7 +73,7 @@ set PYTHONPATH=%PYTHONPATH%;C:\mypath\src
 
 ### 3.1 Directory structure and files
 
-When you prepare the datasets and train the models, directories and files will get created under a **project root** directory as shown in the diagram below. You can use any name and location for this directory.
+When you prepare the datasets and train the models, directories and files will get created under a **project root** directory as shown in the diagram below. In the repository, the project root is **src/project**, but you can use your own name and location.
 
 The diagram only shows directories and files that are created when using the 124M model size. If you use a different size, for example 355M, a directory called **gpt2_355M** will be created under the project root with the same structure and files as shown in the diagram.
 
@@ -348,25 +348,23 @@ For the question answering and news classification tasks, I used greedy sampling
 
 ### 7.2 Question answering (SQuAD test set)
 
-### Accuracy metric
+**Accuracy metric**:
 
-One obvious observation is that the exact-match accuracy metric is often too crude to reflect the actual performance of the model, and the 45.8% accuracy I obtained under-estimates the model.
+One obvious observation is that the exact-match accuracy metric is often too crude to reflect the actual performance of the model, and the 45.8% accuracy I obtained under-estimates it. The model does not get any credit for answers that are correct but formulated differently than the annotations, answers that are more or less verbose than the annotation, and answers that are correct but incomplete.
 
-The model does not get any credit for answers that are correct but formulated differently than the annotations, answers that are more or less verbose than the annotation, and answers that are correct but incomplete.
+Prompt IDs 10, 19, 21, 36, 40, 44, and 47 are examples of this issue.
 
-Prompt IDs 8, 10, 19, and 21 are examples of this issue.
-
-### Model strengths
+**Model strengths**:
 
 - **Factual recall on clean questions**: IDs 4, 5, 22, 24, 25, 26, 32, 34, 35, 39 are all correct and well-formed. The model handles straightforward who/what/when questions reliably.
 
 - **Appropriate answer brevity**: The model generally extracts compact spans and avoids copying entire sentences. For example in ID 19, it gives a straight-to-the-point answer while the annotation is too verbose. However, it sometimes cuts off its answer too soon, like in ID 24 where it answers "16th" instead of "16th century", or in ID 8 where it answers "go home" instead of "go home and change".
 
-- **Semantic understanding**: ID 29 ("separation" for "fragmentation") and ID 33 show that the model grasps meaning even when it doesn't match the annotation exactly.
+- **Semantic understanding**: ID 29 ("separation" for "fragmentation") shows that the model grasps meaning even when it doesn't match the annotation exactly.
 
 - **Robust to varied writing styles and text structures**: The model is able to locate relevant spans in contexts written in a scientific, journalistic, or historical register. 
 
-### Model Weaknesses
+**Model weaknesses**:
 
 - **Confusion between entities of the same type**: When a sentence contains multiple entities of the same type (e.g., two different years, two different radio stations, or two different numbers), the model often picks the wrong one from the immediate vicinity. This happens for example in ID 2 where the model picks the "KOA" radio station instead of "KRFX", and in ID 27 where it chooses "Disney–ABC International Television" instead of "Disney–ABC Domestic Television".
 
@@ -374,43 +372,53 @@ Prompt IDs 8, 10, 19, and 21 are examples of this issue.
 
 ### 7.3 Text simplification (wikilarge test set)
 
-### Model strengths
+**Model strengths:**
 
-- **Minor rephrasing and trimming**: The model handles simple simplifications well, removing text between parenthesis, introductory phrases, or redundant clauses without distorting meaning. IDs 54, 62, 63, 72, 84, 97 are clean examples where the output is fluent and faithful to the source.
+- **Minor rephrasing and trimming**: The model handles simple simplifications well, removing text between parentheses, introductory phrases, or redundant clauses without distorting meaning. IDs 54, 55, 58, 73, 84, 98, and 99 are clean examples where the output is fluent and faithful to the source.
 
-- **Vocabulary substitution**: The model occasionally replaces words with simpler synonyms appropriately. In ID 70, "tends to be unaware" becomes "is unaware", and in ID 91, "regions" becomes "areas" and "substantial" becomes "significant".
+- **Vocabulary substitution**: The model occasionally replaces words with simpler synonyms appropriately. In ID 79, "interred" becomes "buried", and in ID 91, "substantial" becomes "large".
 
-- **Sentence splitting**: In ID 60, the model correctly splits a complex sentence into two simpler ones, which is a legitimate simplification strategy.
+- **Sentence splitting**: In ID 81, the model correctly splits and reorganizes a complex sentence into a main clause and a subordinate clause ("When he is going to rehearsal..."), which functions as a legitimate simplification strategy.
 
-### Hallucinations
+**Hallucinations**:
 
-The model frequently "hallucinates", generating content that is entirely absent from the source text.
+The model frequently "hallucinates", generating content that is entirely absent from the source text or fabricating new facts.
 
-For example:
+- ID 50: claims the character "lives with many people" with no basis in the source.
 
-- ID 52: adds "in a car accident" with no basis in the source.
-- ID 55: invents "1982 American Athletic Conference championship".
-- ID 57: replaces all named entities with "Tiger Woods" three times.
-- ID 59: replaces "Rancho Palos Verdes" with "Rambo Palos Verdes" and fabricates a description.
-- ID 83: invents a claim about the "highest-ever percentage of votes".
-- ID 92: adds "in Israel" with no basis.
-- ID 98: replaces "Brighton" with "Blaze".
+- ID 56: invents a completely fictional claim that the topic is "the oldest museum in Scotland, and the largest in England."
 
-### Meaning-altering omissions
+- ID 57: replaces the named entity "Saturn" with a completely unmentioned person, "Ventura".
 
-The model sometimes drops information that changes the meaning rather than simplifying it:
+- ID 61: adds that giardiasis is caused specifically "in small children" with no factual backing in the prompt.
 
-- ID 71: drops "organized into a tropical depression off the northern coast of Haiti", producing a much less informative sentence.
-- ID 77: drops the key detail that it was Tazz, not Venis, who hit Rikishi with the camera, altering who did what.
-- ID 96: drops the 1994 tour entirely.
+- ID 93: completely fabricates a sentence about bird population metrics ("The number of birds in the population has doubled since 2000.") out of a source text about marine life (pipefish and seahorses).
 
-### Other weaknesses
+**Meaning-altering omissions**:
 
-**Numerical errors:** In ID 93, the model changes "forty-nine" to "thirty-nine" with no justification, introducing a factual error.
+The model sometimes drops information that changes the meaning or completely strips out the core subject rather than simplifying it.
 
-**No simplification**: In IDs 87 and 95, the model outputs the source sentence verbatim, performing no simplification at all.
+- ID 63: drops the phrase "subject of numerous reports", oversimplifying the text to the point of a meaning shift ("The event was called ethics in scholarship.").
 
-**Loss of referential clarity**: In ID 79, "He is buried there" loses the specific location entirely, making the sentence less informative than the original.
+- ID 71: drops "off the northern coast of Haiti", producing a much less geographically informative sentence.
+
+- ID 76: cuts the second half of the sentence entirely, missing the key requirement that a user must set a nickname to connect to IRC.
+
+- ID 89: strips away almost all context regarding the survival of a brand across digital media, reducing it to a vague statement about what it was named after.
+
+- ID 95: drops the entire subject of the sentence ("real estate, businesses and other assets in the underground economies of the Third World"), leaving a dangling pronoun ("They cannot be used...") with no referent.
+
+**Loss of referential clarity**:
+
+- In ID 67, changing "Landis' father" to just "Landis" ruins the referential clarity, making it sound like the son is supporting himself.
+
+- In ID 90, changing "Schuschnigg immediately responded publicly that..." to "This led to..." deletes the actor entirely, making it unclear who or what caused the reports to be false.
+
+- In ID 97, the model shifts from a general statement about five Dravidian languages to a highly specific sentence focusing only on "The Tamil language," losing the broader scope of the original message.
+
+**Numerical errors**: In ID 82, the model inexplicably changes "Seventy-five defencemen" to "Thirty-four defencemen", introducing a blatant factual error.
+
+**No simplification**: In IDs 59, 62, 64, 65, and 72, the model outputs the source sentence verbatim, performing no simplification at all.
 
 
 ### 7.4 News classification (ag_news test set)
