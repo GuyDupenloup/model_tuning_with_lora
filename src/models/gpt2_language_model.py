@@ -113,7 +113,12 @@ class GPT2LanguageModel(tf.keras.models.Model):
         """
         Forward pass through language model.
         """
-        gpt2_output = self.gpt2_model(inputs["input_ids"], inputs["attention_mask"], training=training)
+        gpt2_output = self.gpt2_model(
+            inputs["input_ids"],
+            inputs["attention_mask"],
+            inputs.get("adapter_selector", None),
+            training=training
+        )
 
         # Output linear layer that projects hidden state representations to vocabulary.
         # Weights of the projection matrix are shared with the token embedding matrix.

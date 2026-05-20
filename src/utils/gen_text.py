@@ -78,7 +78,8 @@ def check_next_token_sampling_params(sampling_method, temperature, top_k, top_p)
 def generate_text(
     model: "tf.keras.Model",
     prompts: list,
-    output_len: int,
+    adapter_selector=None,
+    output_len: int = 100,
     sampling_method: str = "top_k",
     temperature: float = 0.8,
     top_k: int = 20,
@@ -128,8 +129,11 @@ def generate_text(
         # Run model
         inputs = {
             'input_ids': tf.constant(input_ids, dtype=tf.int32),
-            'attention_mask': tf.constant(attention_masks, dtype=tf.int32)
+            'attention_mask': tf.constant(attention_masks, dtype=tf.int32),
         }
+        if adapter_selector is not None:
+            inputs["adapter_selector"] = adapter_selector
+
         hidden_states = model(inputs)
 
         # Sample next tokens
@@ -155,7 +159,7 @@ def generate_text(
             tokens_out[i].append(next_tokens[i])
 
         # Early stop if all sequences hit EOS ---
-        if all(t == pad_token for t in next_tokens):
-            break
+        # if all(t == pad_token for t in next_tokens):
+        #     break
 
     return tokens_out
