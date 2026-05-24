@@ -3,7 +3,6 @@
  
 import numpy as np
 import tensorflow as tf
-import tiktoken
 
 
 def sample_next_token(logits, sampling_method='greedy', temperature=1.0, top_k=0, top_p=1.0):
@@ -76,16 +75,14 @@ def check_next_token_sampling_params(sampling_method, temperature, top_k, top_p)
         
 
 def generate_text(
-    model: "tf.keras.Model",
-    prompts: list,
-    adapter_selector=None,
-    output_len: int = 100,
-    sampling_method: str = "top_k",
-    temperature: float = 0.8,
-    top_k: int = 20,
-    top_p: float = 1.0,
-
-) -> list:
+    model,
+    model_inputs,
+    output_len,
+    sampling_method="top_k",
+    temperature=0.8,
+    top_k=20,
+    top_p=1.0,
+):
     """
     Generates output texts given a list of input prompts and a max number of output tokens.
 
@@ -103,63 +100,48 @@ def generate_text(
     """
     check_next_token_sampling_params(sampling_method, temperature, top_k, top_p)
 
-    pad_token = 50256
-    tokenizer = tiktoken.get_encoding('gpt2')
+    eos_token = 50256
 
-    # Encode prompts
-    tokens_out = [tokenizer.encode(prompt) for prompt in prompts]
+    tokens_out = model_inputs["input_ids"].numpy()
+    masks_out  = model_inputs["attention_mask"].numpy()
+    adapter_selector = model_inputs["adapter_selector"]
 
-    max_context_len = 1024  # GPT-2 context limit (adjust if needed)
+    batch_size = tokens_out.shape[0]
+    finished = [False] * batch_size
 
     for _ in range(output_len):
-        batch_size = len(tokens_out)
-        input_ids = []
-        attention_masks = []
 
-        for tokens in tokens_out:
-            current_tokens = tokens[-max_context_len:]
-            seq_len = len(current_tokens)
+        # Exit loop if all sequences are done
+        if all(finished):
+            break
 
-            padded_input = current_tokens
-            attention_mask = [1] * seq_len
+        hidden_states = model({
+            "input_ids": tf.constant(tokens_out, dtype=tf.int32),
+            "attention_mask": tf.constant(masks_out, dtype=tf.int32),
+            "adapter_selector": adapter_selector
+        }).numpy()
 
-            input_ids.append(padded_input)
-            attention_masks.append(attention_mask)
+        # Get the indices of the last tokens before padding
+        last_token_indices = masks_out.sum(axis=1) - 1
 
-        # Run model
-        inputs = {
-            'input_ids': tf.constant(input_ids, dtype=tf.int32),
-            'attention_mask': tf.constant(attention_masks, dtype=tf.int32),
-        }
-        if adapter_selector is not None:
-            inputs["adapter_selector"] = adapter_selector
+        logits = hidden_states[range(batch_size), last_token_indices, :]  # (batch, vocab_size)
 
-        hidden_states = model(inputs)
+        predicted_tokens = sample_next_token(
+            logits,
+            sampling_method=sampling_method,
+            temperature=temperature,
+            top_k=top_k,
+            top_p=top_p
+        )
 
-        # Sample next tokens
-        next_tokens = []
-        for i in range(batch_size):
-            current_tokens = tokens_out[i][-max_context_len:]
-            last_token_index = len(current_tokens) - 1
-
-            logits = hidden_states[i, last_token_index, :]
-            logits = np.squeeze(logits.numpy())
-
-            next_token = sample_next_token(
-                logits[np.newaxis, :],
-                sampling_method=sampling_method,
-                temperature=temperature,
-                top_k=top_k,
-                top_p=top_p
-            )
-            next_tokens.append(next_token[0])
-
-        # Append tokens
-        for i in range(batch_size):
-            tokens_out[i].append(next_tokens[i])
-
-        # Early stop if all sequences hit EOS ---
-        # if all(t == pad_token for t in next_tokens):
-        #     break
+        pad_starts = masks_out.sum(axis=1)
+        for b in range(batch_size):
+            if finished[b]:
+                continue
+            if predicted_tokens[b] == eos_token:
+                finished[b] = True
+                continue
+            tokens_out[b, pad_starts[b]] = predicted_tokens[b]
+            masks_out[b, pad_starts[b]] = 1
 
     return tokens_out

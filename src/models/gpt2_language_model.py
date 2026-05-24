@@ -47,6 +47,8 @@ class GPT2LanguageModel(tf.keras.models.Model):
                         Loss mask to exclude some of the tokens in the prompt from loss calculation.
                         0: excluded, 1: included
                         A tf.tensor with shape (batch_size, seq_len) and data type tf.int32
+                    'adapter_selector':
+                        An integer, the index of the LoRA adapter to activate
 
         Returns:
             Hidden state logits over vocabulary
@@ -79,18 +81,9 @@ class GPT2LanguageModel(tf.keras.models.Model):
     def set_dropout_rate(self, dropout_rate):
         self.gpt2_model.set_dropout_rate(dropout_rate)
 
-    # Activate a LoRA adapter
-    def activate_adapter(self, adapter):
-        self.gpt2_model.activate_adapter(adapter)
-
-    # Deactivate all LoRA adapters
-    def deactivate_adapters(self):
-        self.gpt2_model.deactivate_adapters()
-
-    # Freeze all the weights of the model except
-    # for the layers of the active LoRA adapter
-    def lora_freeze(self):
-        self.gpt2_model.lora_freeze()
+    # Freeze all the weights of the model except the adapter in argument
+    def lora_freeze(self, adapter_idx):
+        self.gpt2_model.lora_freeze(adapter_idx)
 
     # Save the configuration of the model in a JSON file
     # and its weights in a "weights.h5" file. The model
@@ -109,14 +102,16 @@ class GPT2LanguageModel(tf.keras.models.Model):
         # Save model weights
         self.save_weights(os.path.join(model_dir, f"{model_name}.weights.h5"))
 
+
     def call(self, inputs, training=None):
         """
         Forward pass through language model.
         """
+
         gpt2_output = self.gpt2_model(
             inputs["input_ids"],
             inputs["attention_mask"],
-            inputs.get("adapter_selector", None),
+            adapter_selector=inputs.get("adapter_selector", None),
             training=training
         )
 

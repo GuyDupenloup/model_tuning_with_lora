@@ -10,43 +10,57 @@ import tensorflow as tf
 from utils.model_utils import load_gpt2_model
 from utils.gen_text import generate_text
 
+tf.config.run_functions_eagerly(True)
 
-def get_prompts(filepath):
 
-    # Load the JSON prompts file
-    if not os.path.isfile(filepath):
-        raise FileNotFoundError(f'Unable to find JSON prompts file {filepath}')
-    
+def get_prompt_data(filepath, tokenizer, seq_len=1024, pad_token=50256):
+
     with open(filepath, "r", encoding="utf-8") as f:
         json_prompts = json.load(f)
-    prompt_data = {int(k): v for k, v in json_prompts.items()}
+    json_data = {int(k): v for k, v in json_prompts.items()}
 
-    tokenizer = tiktoken.get_encoding("gpt2")
-    seq_len = 1024
-    pad_token = 50256
+    prompt_data = []
 
-    for _, example in prompt_data.items():
-        prompt = example["prompt"]
+    for id, json_example in json_data.items():
+
+        example = {
+            "id": id,
+            "annotation": json_example["annotation"]
+        }
 
         # Get the task to perform
+        prompt = json_example["prompt"]
+        example["prompt"] = prompt
+
         if prompt.startswith("### Task: answer question\n\n"):
             task = "answer question"
         elif prompt.startswith("### Task: simplify text\n\n"):
             task = "simplify text"
-        elif prompt.startswith("### Task: answer question\n\n"):
-            task = "answer question"
+        elif prompt.startswith("### Task: classify news\n\n"):
+            task = "classify news"
         else:
             raise ValueError(
                 f"Unable to identify the task to perform from input prompt:\n{prompt}\n"
                 "\nValid tasks are: 'follow instructions', 'simplify text', 'classify news'"
             )
+        
         example["task"] = task
 
-        # Tokenize the prompt, truncate and pad
+        # Tokenize the prompt and truncate
         prompt_ids = tokenizer.encode(prompt)
         prompt_ids = prompt_ids[:seq_len]
-        prompt_ids += [pad_token] * (seq_len - len(prompt_ids))
-        example["prompt_ids"]
+
+        attention_mask = [1] * len(prompt_ids)
+
+        if len(prompt_ids) < seq_len:
+            pad_len = seq_len - len(prompt_ids)
+            prompt_ids += [pad_token] * pad_len
+            attention_mask += [0] * pad_len
+
+        example["prompt_ids"] = prompt_ids
+        example["attention_mask"] = attention_mask
+
+        prompt_data.append(example)
 
     return prompt_data
 
@@ -84,66 +98,64 @@ def test_prompts(project_root, model_size):
     if not os.path.isdir(project_root):
         raise FileNotFoundError(f"Unable to find project root directory {project_root}")
     
+    # Load the prompts file
+    prompts_fn = os.path.join(project_root, f"gpt2_{model_size}", "tests", "example_prompts.json")
+    if not os.path.isfile(prompts_fn):
+        raise FileNotFoundError(f'Unable to find JSON prompts file {prompts_fn}')
+    
+    print(f">> Loading prompts file {prompts_fn}")
+    tokenizer = tiktoken.get_encoding("gpt2")
+    prompt_data = get_prompt_data(prompts_fn, tokenizer)
+
     # Load the model with LoRA adapters
     model_dir = os.path.join(project_root, f"gpt2_{model_size}", "trained_models")
     model_name = "lora_adapters"
 
-    # print(f">>Loading model `{model_name}` from directory {model_dir}")
-    # model = load_gpt2_model(model_dir, model_name)
-
-    # Load the prompts file
-    prompts_fn = os.path.join(project_root, f"gpt2_{model_size}", "tests", "example_prompts.json")
-    print(f">> Loading prompts file {prompts_fn}")
-
-    prompt_data = get_prompts(prompts_fn)
+    print(f">>Loading model `{model_name}` from directory {model_dir}")
+    model = load_gpt2_model(model_dir, model_name)
+    model.compile()
 
     model_responses = {}
     annotations = {}
 
-    for index, example in prompt_data.items():
+    for example in prompt_data:
 
         # Activate the task adapter
         task = example["task"]
-        adapter_tasks = model.lora_config["tasks"]
-        print(f"Prompt id: {index}    Task: {example['task']}")
 
+        print(f"Prompt id: {example['id']}    Task: {example['task']}")
+
+        num_adaptors = 3
         if example["task"] == "answer question":
-            adapter_selector = [1, 0, 0]
+            adapter_selector = 0
         elif example["task"] == "simplify text":
-            adapter_selector = [0, 1, 0]
+            adapter_selector = 1
         elif example["task"] == "classify news":
-            adapter_selector = [0, 0, 1]
-        else:
-            adapter_selector = [0, 0, 0]
+            adapter_selector = 2
 
-        infer_prompts = tf.constant([example["prompt_ids"] for _ in range(12)], dtype=tf.int32)
-        infer_adapter_selector = tf.constant([adapter_selector for _ in range(12)], dtype=tf.int32)
+        model_inputs = {
+            "input_ids": tf.constant([example["prompt_ids"]], dtype=tf.int32),
+            "attention_mask": tf.constant([example["attention_mask"]], dtype=tf.int32),
+            "adapter_selector": tf.expand_dims(tf.one_hot(adapter_selector, num_adaptors, dtype=tf.float32), axis=0)
+        }
 
-        print('==>', tf.shape(infer_prompts))
-        print('==>', tf.shape(infer_adapter_selector))
-        
-        # Activate the adapter
-        # model.activate_adapter(adapter)
-        # model.compile()
- 
-        sampling_method = 'top_k' if task == 'simplify text' else 'greedy'
+        sampling_method = "top_k" if task == "simplify text" else "greedy"
 
         tokens_out = generate_text(
             model,
-            prompts=infer_prompts,
-            adapter_selector=infer_adapter_selector,
+            model_inputs=model_inputs,
             output_len=100,
             sampling_method=sampling_method,
             temperature=0.8,
             top_k=20
         )
+    
+        model_responses[id] = postprocess_model_output(tokens_out[0])
+        annotations[id] = example["annotation"]
 
-        model_responses[index] = postprocess_model_output(tokens_out[0])
-        annotations[index] = example["annotation"]
-
-    # responses_fn = os.path.join(project_root, f"gpt2_{model_size}", "tests", "lora_responses.txt")
-    # print(f"Writing model responses to file {responses_fn}")
-    # dump_responses(model_responses, annotations, responses_fn)
+    responses_fn = os.path.join(project_root, f"gpt2_{model_size}", "tests", "lora_responses.txt")
+    print(f"Writing model responses to file {responses_fn}")
+    dump_responses(model_responses, annotations, responses_fn)
 
 
 if __name__ == "__main__":

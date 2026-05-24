@@ -8,6 +8,8 @@ import numpy as np
 import tensorflow as tf
 from models.gpt2_language_model import GPT2LanguageModel
 
+tf.config.run_functions_eagerly(True)
+
 
 def get_gpt2_model_config(model_size):
     """
@@ -87,10 +89,11 @@ def load_openai_gpt2_weights(model, filepath):
 
 
 def create_gpt2_language_model_from_config(
-    model_config,
-    lora_config=None,
-    name="gpt2_lm"
-):
+        model_config,
+        lora_config=None,
+        name="gpt2_lm"
+    ):
+    
     """
     Creates a GPT-2 language model (base GPT-2 model with a language modelling output layer).
     OpenAI's pretrained weights are loaded in the model.
@@ -111,29 +114,32 @@ def create_gpt2_language_model_from_config(
         A tf.keras.models.Model object.
         Pretrained GPT-2 language model of the specified size.
     """
-
+        
     model = GPT2LanguageModel(
         model_config, 
         lora_config=lora_config,
         name=name
     )
 
-    # Build the model using dummy inputs
     max_seq_len = model_config["max_seq_len"]
     vocab_size = model_config["vocab_size"]
 
-    dummy_inputs = {
-        "input_ids": tf.random.uniform((1, max_seq_len), minval=0, maxval=vocab_size, dtype=tf.int32),
-        "attention_mask": tf.random.uniform((1, max_seq_len), minval=0, maxval=2, dtype=tf.int32)
-    }
-
-    # Build the model
     if lora_config is not None:
-        for i in range(lora_config["num_adapters"]):
-            model.activate_adapter(i)
-            _ = model(dummy_inputs)
+        # Cycle through all adapters
+        num_adapters = lora_config["num_adapters"]
+        for i in range(num_adapters):
+            inputs = {
+                "input_ids": tf.random.uniform((1, max_seq_len), minval=0, maxval=vocab_size, dtype=tf.int32),
+                "attention_mask": tf.ones((1, max_seq_len), dtype=tf.int32),
+                "adapter_selector": tf.expand_dims(tf.one_hot(i, num_adapters, dtype=tf.float32), axis=0)
+            }
+            _ = model(inputs)
     else:
-        _ = model(dummy_inputs)
+        inputs = {
+            "input_ids": tf.random.uniform((1, max_seq_len), minval=0, maxval=vocab_size, dtype=tf.int32),
+            "attention_mask": tf.random.uniform((1, max_seq_len), minval=0, maxval=2, dtype=tf.int32)
+        }
+        _ = model(inputs)
 
     return model
 

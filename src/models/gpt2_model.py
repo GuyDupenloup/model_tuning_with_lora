@@ -6,6 +6,7 @@ import tensorflow as tf
 def gelu_approximate(x):
     return tf.nn.gelu(x, approximate=True)
 
+tf.config.run_functions_eagerly(True)
 
 @tf.keras.utils.register_keras_serializable()
 class LoRALayer(tf.keras.layers.Layer):
@@ -55,6 +56,35 @@ class LoRALayer(tf.keras.layers.Layer):
             "dropout_rate": self.dropout_rate
         })
         return config
+
+
+def _apply_lora_layers(lora_layers, inputs, adapter_selector, training=None):
+    """
+    Compute the weighted sum of all LoRA adapter outputs for each sample.
+
+    Args:
+        lora_layers:      list of LoRALayer, length = num_adapters
+        inputs:           tf.Tensor (batch, seq, d)
+        adapter_selector: tf.Tensor (batch, num_adapters), float32
+        training:         bool or None
+
+    Returns:
+        tf.Tensor (batch, seq, d)
+    """
+    # (num_adapters, batch, seq, d)
+    stacked = tf.stack([layer(inputs, training=training) for layer in lora_layers], axis=0)
+
+    # (batch, num_adapters, seq, d)
+    stacked = tf.transpose(stacked, perm=[1, 0, 2, 3])
+
+    # Reshape selector for broadcasting: (batch, num_adapters, 1, 1)
+    weights = tf.reshape(
+        adapter_selector,
+        (tf.shape(adapter_selector)[0], len(lora_layers), 1, 1)
+    )
+
+    # Weighted sum over adapter axis → (batch, seq, d)
+    return tf.reduce_sum(stacked * weights, axis=1)
 
 
 class MultiHeadAttention(tf.keras.layers.Layer):
@@ -110,7 +140,8 @@ class MultiHeadAttention(tf.keras.layers.Layer):
             tf.ones((max_seq_len, max_seq_len), dtype=tf.bool), -1, 0
         )
 
-    def call(self, inputs, attention_mask, active_adapter=None, training=None):
+
+    def call(self, inputs, attention_mask, adapter_selector=None, training=None):
 
         batch = tf.shape(inputs)[0]
         seq_len = tf.shape(inputs)[1]
@@ -119,10 +150,10 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         QKV = self.W_qkv(inputs)
         Q, K, V = tf.split(QKV, 3, axis=-1)
 
-        if active_adapter is not None:
-            Q += self.W_q_lora_layers[active_adapter](inputs)
-            K += self.W_k_lora_layers[active_adapter](inputs)
-            V += self.W_v_lora_layers[active_adapter](inputs)
+        if adapter_selector is not None: 
+            Q += _apply_lora_layers(self.W_q_lora_layers, inputs, adapter_selector, training)
+            K += _apply_lora_layers(self.W_k_lora_layers, inputs, adapter_selector, training)
+            V += _apply_lora_layers(self.W_v_lora_layers, inputs, adapter_selector, training)
 
         # Reshape
         Q = tf.reshape(Q, (batch, seq_len, self.n_heads, self.d_head))
@@ -156,10 +187,11 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         # Output projection
         out = self.output_proj(context)
 
-        if active_adapter is not None:
-            out += self.c_proj_lora_layers[active_adapter](context)
+        if adapter_selector is not None: 
+            out += _apply_lora_layers(self.c_proj_lora_layers, context, adapter_selector, training) 
 
         return out
+
 
     def get_config(self):
         config = super().get_config()
@@ -208,17 +240,19 @@ class GPT2FeedForwardNetwork(tf.keras.layers.Layer):
                 for i in range(num_adapters)
             ]
 
-    def call(self, inputs, active_adapter=None, training=None):
+
+    def call(self, inputs, adapter_selector=None, training=None):
 
         x = self.ff_inner(inputs)
-        if active_adapter is not None:
-            x += self.ff_inner_lora_layers[active_adapter](inputs)
+        if adapter_selector is not None:
+            x += _apply_lora_layers(self.ff_inner_lora_layers, inputs, adapter_selector, training)
 
         x = self.ff_out(x)
-        if active_adapter is not None:
-            x += self.ff_out_lora_layers[active_adapter](x)
+        if adapter_selector is not None:
+            x += _apply_lora_layers(self.ff_out_lora_layers, x, adapter_selector, training)
 
         return x
+
 
     def get_config(self):
         config = super().get_config()
@@ -227,7 +261,6 @@ class GPT2FeedForwardNetwork(tf.keras.layers.Layer):
             "lora_config": self.lora_config
         })
         return config
-    
 
 @tf.keras.utils.register_keras_serializable()
 class GPT2Transformer(tf.keras.layers.Layer):
@@ -261,11 +294,11 @@ class GPT2Transformer(tf.keras.layers.Layer):
         self.dropout_2 = tf.keras.layers.Dropout(rate=dropout_rate, name="drop_2")
 
 
-    def call(self, inputs, attention_mask, active_adapter=None, training=None):
+    def call(self, inputs, attention_mask, adapter_selector=None, training=None):
 
         # First sub-layer
         x1 = self.layer_norm_1(inputs, training=training)
-        x1 = self.attn_heads(x1, attention_mask, active_adapter=active_adapter, training=training)
+        x1 = self.attn_heads(x1, attention_mask, adapter_selector=adapter_selector, training=training)
         x1 = self.dropout_1(x1, training=training)
 
         # First residual connection
@@ -273,7 +306,7 @@ class GPT2Transformer(tf.keras.layers.Layer):
 
         # Second sub-layer
         x3 = self.layer_norm_2(x2, training=training)
-        x3 = self.ffn(x3, active_adapter=active_adapter, training=training)
+        x3 = self.ffn(x3, adapter_selector=adapter_selector, training=training)
         x3 = self.dropout_2(x3, training=training)
 
         # Second residual connection
@@ -291,7 +324,7 @@ class GPT2Transformer(tf.keras.layers.Layer):
             "dropout_rate": self.dropout_rate
         })
         return config
-    
+
 
 @tf.keras.utils.register_keras_serializable()
 class GPT2Model(tf.keras.models.Model):
@@ -312,20 +345,6 @@ class GPT2Model(tf.keras.models.Model):
             If present, keys must include 'num_adapters, 'rank' and 'alpha'. The values of 'alpha' and 'rank'
             must be tuples of positive integers with length equal to 'num_adapters'.
             If the argument is not present, no LoRA layers are added to the model.
-
-    Model call() method:
-    -------------------
-        Arguments:
-            inputs:
-                Input token IDs.
-                A tf.Tensor with shape (batch_size, seq_len) and data type tf.int32
-            Attention mask:
-                Mask used to remove padding tokens from consideration
-                0: ignored, 1: considered
-                A tf.tensor with shape (batch_size, seq_len) and data type tf.int32
-        Returns:
-            Hidden state logits over vocabulary
-            A tf.Tensor of with shape (batch_size, seq_len, vocab_size) and data_type tf.float32
     """
 
     def __init__(self, model_config, lora_config=None, name=None, **kwargs):
@@ -335,9 +354,6 @@ class GPT2Model(tf.keras.models.Model):
         self.lora_config = lora_config
 
         self.dropout_rate = 0.1   # Default value
-
-        # The active adapter must be set using the set_adapter() method
-        self.active_adapter = None
 
         vocab_size, max_seq_len, d_model, n_layers, n_heads = (
             model_config[k] for k in ("vocab_size", "max_seq_len", "d_model", "n_layers", "n_heads")
@@ -368,9 +384,9 @@ class GPT2Model(tf.keras.models.Model):
         self.positions = tf.range(start=0, limit=max_seq_len, delta=1)
 
 
-    def call(self, inputs, attention_mask, training=None):
+    def call(self, inputs, attention_mask, adapter_selector=None, training=None):
         """
-        Forward pass through the GPT-2 model
+        Forward pass through the GPT-2 model.
         """
         
         # Token embeddings
@@ -389,7 +405,7 @@ class GPT2Model(tf.keras.models.Model):
         for transformer in self.transformer_layers:
             x = transformer(x,
                 attention_mask,
-                active_adapter=self.active_adapter,
+                adapter_selector=adapter_selector,
                 training=training
             )
 
@@ -429,34 +445,7 @@ class GPT2Model(tf.keras.models.Model):
                         lora_layer.dropout.rate = dropout_rate
 
 
-    def activate_adapter(self, adapter):
-        """
-        Activate the LoRA adapter of index `adapter`
-        Raises an error if the model has no LoRA layers or the value of `adapter` is out of range.
-        """
-
-        if self.lora_config is None:
-            raise ValueError("Unable to activate adapter. The model has no LoRA layers.")
-
-        if adapter < 0 or adapter >= self.lora_config["num_adapters"]:
-            raise ValueError(
-                f"Unable to activate LoRA adapter\nIndex must be >= 0 and < {self.lora_config['num_adapters']}"
-                f"\nReceived: {adapter}"
-            )
-        self.active_adapter = adapter
-
-
-    def deactivate_adapters(self):
-        """
-        Deactivate all LoRA adapters, making the model behave like if it had no LoRA adapters.
-        Raises an error if the model has no LoRA layer.
-        """
-
-        if self.lora_config is None:
-            raise ValueError("Unable to activate or disable adapters. The model has no LoRA layers.")
-
-
-    def lora_freeze(self):
+    def lora_freeze(self, adapter_idx):
         """
         Freezes all model weights except the LoRA layers of the active adapter.
         Raises an error if the model has no LoRA layers or no LoRA adapter was activated.
@@ -464,8 +453,13 @@ class GPT2Model(tf.keras.models.Model):
 
         if self.lora_config is None:
             raise ValueError("Unable to freeze layers. The model has no LoRA layers.")
-        if self.active_adapter is None:
-            raise ValueError("Unable to freeze layers. No LoRA adapter was selected.")
+        
+        num_adapters = self.lora_config["num_adapters"]
+        if adapter_idx < 0 or adapter_idx >= num_adapters:
+            raise ValueError(
+                f"LoRA adapter index should be in interval [0, {num_adapters - 1}]. "
+                f"Received {adapter_idx}"
+            )
 
         # Make the model trainable
         self.trainable = True
@@ -493,7 +487,7 @@ class GPT2Model(tf.keras.models.Model):
 
             if self.lora_config is not None:
                 for i in range(self.lora_config["num_adapters"]):
-                    if i != self.active_adapter:
+                    if i != adapter_idx:
                         attn.W_q_lora_layers[i].trainable = False
                         attn.W_k_lora_layers[i].trainable = False
                         attn.W_v_lora_layers[i].trainable = False
@@ -516,3 +510,4 @@ class GPT2Model(tf.keras.models.Model):
             "lora_config": self.lora_config
         })
         return config
+
