@@ -46,7 +46,10 @@ def write_dataset_tfrecords(output_dir, metadata, train_data, val_data, test_dat
         write_tfrecord(test_data, filepath=os.path.join(output_dir, "test.tfrecord"))
 
 
-def ds_from_tfrecord(ds, seq_len, batch_size, shuffle=False, cache=False, buffer_size=1000):
+def build_ds_pipeline(
+    ds, seq_len, batch_size, adapter_selector=None, 
+    shuffle=False, cache=False, buffer_size=1000
+):
     """
     Creates a tf.data.Dataset pipeline.
     """
@@ -71,18 +74,27 @@ def ds_from_tfrecord(ds, seq_len, batch_size, shuffle=False, cache=False, buffer
     if shuffle:
         ds = ds.shuffle(buffer_size)
     ds = ds.batch(batch_size, drop_remainder=True)
+
+    # Add adapter_selector to each batch if provided
+    if adapter_selector is not None:
+        selector = tf.constant(adapter_selector, dtype=tf.float32)  # (num_adapters,)
+        ds = ds.map(
+            lambda batch: {**batch, "adapter_selector": tf.broadcast_to(
+                selector, (batch_size, len(adapter_selector))
+            )},
+            num_parallel_calls=tf.data.AUTOTUNE
+        )
+
     ds = ds.prefetch(tf.data.AUTOTUNE)
     
     return ds
 
 
-def create_data_loaders(dataset_dir, batch_size):
+def create_data_loaders(dataset_dir, batch_size, adapter_selector=None):
 
-    # Check that the TFRecords directory exists
     if not os.path.isdir(dataset_dir):
         raise FileNotFoundError(f"Unable to find dataset directory {dataset_dir}")
     
-    # Read the medata JSON file
     metadata_path = os.path.join(dataset_dir, "metadata.json")
     with open(metadata_path, "r") as f:
         metadata = json.load(f)
@@ -95,14 +107,12 @@ def create_data_loaders(dataset_dir, batch_size):
     print(f"  test size: {metadata['test_size']}")
     print(f"  sequence length: {seq_len}")
 
-    # Read dataset TFRecords
     train_tfr = tf.data.TFRecordDataset(os.path.join(dataset_dir, "train.tfrecord"))
     val_tfr = tf.data.TFRecordDataset(os.path.join(dataset_dir, "val.tfrecord"))
     test_tfr = tf.data.TFRecordDataset(os.path.join(dataset_dir, "test.tfrecord"))
 
-    # Create data loaders
-    train_ds = ds_from_tfrecord(train_tfr, seq_len, batch_size, shuffle=True)
-    val_ds = ds_from_tfrecord(val_tfr, seq_len, batch_size)
-    test_ds = ds_from_tfrecord(test_tfr, seq_len, batch_size)
+    train_ds = build_ds_pipeline(train_tfr, seq_len, batch_size, adapter_selector=adapter_selector, shuffle=True)
+    val_ds   = build_ds_pipeline(val_tfr,   seq_len, batch_size, adapter_selector=adapter_selector)
+    test_ds  = build_ds_pipeline(test_tfr,  seq_len, batch_size, adapter_selector=adapter_selector)
 
     return (train_ds, val_ds, test_ds), metadata

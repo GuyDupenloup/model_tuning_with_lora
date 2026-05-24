@@ -129,15 +129,19 @@ def train_model(project_root, model_size):
 
     data_loaders["squad"], _ = create_data_loaders(
         os.path.join(dataset_root, "squad"),
-        batch_size=16
+        batch_size=16,
+        adapter_selector=[1, 0, 0]
     )
+
     data_loaders["wikilarge"], _ = create_data_loaders(
         os.path.join(dataset_root, "wikilarge"),
-        batch_size=16
+        batch_size=16,
+        adapter_selector=[0, 1, 0]
     )
     data_loaders["ag_news"], _ = create_data_loaders(
         os.path.join(dataset_root, "ag_news"),
-        batch_size=16
+        batch_size=16,
+        adapter_selector=[0, 0, 1]
     )
     
     print(f"\nCreating gpt-2 model `{model_size}`")
