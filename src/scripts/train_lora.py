@@ -22,23 +22,6 @@ def train_squad_adapter(model, data_loaders):
 
     model.set_dropout_rate(0.1)
 
-    # steps_per_epoch = 5474
-    # epochs = 2
-    # total_steps = steps_per_epoch * epochs 
-
-    # warmup_steps = 1000
-    # peak_lr = 1e-3
-    # final_lr = 1e-5
-
-    # lr_schedule = tf.keras.optimizers.schedules.CosineDecay(
-    #     initial_learning_rate=0.0,
-    #     decay_steps=total_steps,
-    #     alpha=final_lr / peak_lr,
-    #     warmup_target=peak_lr,
-    #     warmup_steps=warmup_steps
-    # )
-    # optimizer = tf.keras.optimizers.AdamW(learning_rate=lr_schedule)
-
     optimizer = tf.keras.optimizers.AdamW(learning_rate=1e-4)
     model.compile(optimizer=optimizer)
     epochs = 2
@@ -157,14 +140,12 @@ def train_model(project_root, model_size):
         lora_config=lora_config
     )
     load_openai_gpt2_weights(model, openai_filepath)
-
+    
     #---------------------------------------------
 
-    adapter_idx = adapter_tasks.index("answer question")
-    print(f"\nTraining LoRA adapter #{adapter_idx} on `squad` dataset")
+    print(f"\nTraining LoRA adapter 0 on `squad` dataset")
     
-    model.activate_adapter(adapter_idx)
-    model.lora_freeze()
+    model.lora_freeze(0)
     print_model_variables(model)
 
     train_squad_adapter(model, data_loaders["squad"])
@@ -172,11 +153,9 @@ def train_model(project_root, model_size):
 
     #---------------------------------------------
 
-    adapter_idx = adapter_tasks.index("simplify text")
-    print(f"\nTraining LoRA adapter #{adapter_idx} on `wikilarge` dataset")
+    print(f"\nTraining LoRA adapter 1 on `wikilarge` dataset")
     
-    model.activate_adapter(adapter_idx)
-    model.lora_freeze()
+    model.lora_freeze(1)
     print_model_variables(model)
 
     train_wikilarge_adapter(model, data_loaders["wikilarge"])
@@ -184,11 +163,9 @@ def train_model(project_root, model_size):
 
     #---------------------------------------------
 
-    adapter_idx = adapter_tasks.index("classify news")
-    print(f"\nTraining LoRA adapter #{adapter_idx} on `ag_news` dataset")
+    print(f"\nTraining LoRA adapter 2 on `ag_news` dataset")
 
-    model.activate_adapter(adapter_idx)
-    model.lora_freeze()
+    model.lora_freeze(2)
     print_model_variables(model)
 
     train_ag_news_adapter(model, data_loaders["ag_news"])
