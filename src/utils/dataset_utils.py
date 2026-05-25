@@ -47,21 +47,15 @@ def write_dataset_tfrecords(output_dir, metadata, train_data, val_data, test_dat
 
 
 def build_ds_pipeline(
-    ds, seq_len, batch_size, adapter_selector=None, 
-    shuffle=False, cache=False, buffer_size=1000
+    ds, seq_len, batch_size, adapter=None, shuffle=False, cache=False, buffer_size=1000
 ):
-    """
-    Creates a tf.data.Dataset pipeline.
-    """
     def parse_and_wrap(example_proto):
-
         feature_spec = {
             "input_ids": tf.io.FixedLenFeature([seq_len], tf.int64),
             "attention_mask": tf.io.FixedLenFeature([seq_len], tf.int64),
             "loss_mask": tf.io.FixedLenFeature([seq_len], tf.int64),
         }
         parsed = tf.io.parse_single_example(example_proto, feature_spec)
-
         return {
             "input_ids": tf.cast(parsed["input_ids"], tf.int32),
             "attention_mask": tf.cast(parsed["attention_mask"], tf.int32),
@@ -70,27 +64,23 @@ def build_ds_pipeline(
 
     ds = ds.map(parse_and_wrap, num_parallel_calls=tf.data.AUTOTUNE)
     if cache:
-        ds = ds.cache() 
+        ds = ds.cache()
     if shuffle:
         ds = ds.shuffle(buffer_size)
     ds = ds.batch(batch_size, drop_remainder=True)
 
-    # Add adapter_selector to each batch if provided
-    if adapter_selector is not None:
-        selector = tf.constant(adapter_selector, dtype=tf.float32)  # (num_adapters,)
+    if adapter is not None:
         ds = ds.map(
-            lambda batch: {**batch, "adapter_selector": tf.broadcast_to(
-                selector, (batch_size, len(adapter_selector))
-            )},
+            lambda batch: {**batch, "adapter": tf.fill((batch_size,), adapter)},  # CHANGE
             num_parallel_calls=tf.data.AUTOTUNE
         )
 
-    ds = ds.prefetch(tf.data.AUTOTUNE)
-    
+        ds = ds.prefetch(tf.data.AUTOTUNE)
+
     return ds
 
 
-def create_data_loaders(dataset_dir, batch_size, adapter_selector=None):
+def create_data_loaders(dataset_dir, batch_size, adapter=None):
 
     if not os.path.isdir(dataset_dir):
         raise FileNotFoundError(f"Unable to find dataset directory {dataset_dir}")
@@ -111,8 +101,8 @@ def create_data_loaders(dataset_dir, batch_size, adapter_selector=None):
     val_tfr = tf.data.TFRecordDataset(os.path.join(dataset_dir, "val.tfrecord"))
     test_tfr = tf.data.TFRecordDataset(os.path.join(dataset_dir, "test.tfrecord"))
 
-    train_ds = build_ds_pipeline(train_tfr, seq_len, batch_size, adapter_selector=adapter_selector, shuffle=True)
-    val_ds   = build_ds_pipeline(val_tfr,   seq_len, batch_size, adapter_selector=adapter_selector)
-    test_ds  = build_ds_pipeline(test_tfr,  seq_len, batch_size, adapter_selector=adapter_selector)
+    train_ds = build_ds_pipeline(train_tfr, seq_len, batch_size, adapter=adapter, shuffle=True)
+    val_ds   = build_ds_pipeline(val_tfr,   seq_len, batch_size, adapter=adapter)
+    test_ds  = build_ds_pipeline(test_tfr,  seq_len, batch_size, adapter=adapter)
 
     return (train_ds, val_ds, test_ds), metadata

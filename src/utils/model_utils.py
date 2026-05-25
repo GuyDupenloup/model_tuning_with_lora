@@ -8,8 +8,6 @@ import numpy as np
 import tensorflow as tf
 from models.gpt2_language_model import GPT2LanguageModel
 
-tf.config.run_functions_eagerly(True)
-
 
 def get_gpt2_model_config(model_size):
     """
@@ -131,7 +129,7 @@ def create_gpt2_language_model_from_config(
             inputs = {
                 "input_ids": tf.random.uniform((1, max_seq_len), minval=0, maxval=vocab_size, dtype=tf.int32),
                 "attention_mask": tf.ones((1, max_seq_len), dtype=tf.int32),
-                "adapter_selector": tf.expand_dims(tf.one_hot(i, num_adapters, dtype=tf.float32), axis=0)
+                "adapter": tf.constant([i], dtype=tf.int32)
             }
             _ = model(inputs)
     else:

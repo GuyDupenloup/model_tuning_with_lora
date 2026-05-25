@@ -108,10 +108,20 @@ class GPT2LanguageModel(tf.keras.models.Model):
         Forward pass through language model.
         """
 
+        if "adapter" in inputs:
+            # Convert the adapter index to one-hot
+            adapter_selector = tf.one_hot(
+                inputs["adapter"],
+                depth=self.lora_config["num_adapters"],
+                dtype=tf.float32
+            )
+        else:
+            adapter_selector = None
+            
         gpt2_output = self.gpt2_model(
             inputs["input_ids"],
             inputs["attention_mask"],
-            adapter_selector=inputs.get("adapter_selector", None),
+            adapter_selector=adapter_selector,
             training=training
         )
 

@@ -6,7 +6,6 @@ import tensorflow as tf
 def gelu_approximate(x):
     return tf.nn.gelu(x, approximate=True)
 
-tf.config.run_functions_eagerly(True)
 
 @tf.keras.utils.register_keras_serializable()
 class LoRALayer(tf.keras.layers.Layer):

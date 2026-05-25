@@ -10,8 +10,6 @@ import tensorflow as tf
 from utils.model_utils import load_gpt2_model
 from utils.gen_text import generate_text
 
-tf.config.run_functions_eagerly(True)
-
 
 def get_prompt_data(filepath, tokenizer, seq_len=1024, pad_token=50256):
 
@@ -113,41 +111,37 @@ def test_prompts(project_root, model_size):
 
     print(f">>Loading model `{model_name}` from directory {model_dir}")
     model = load_gpt2_model(model_dir, model_name)
-    model.compile()
+
+    lora_tasks = model.lora_config["tasks"]
 
     model_responses = {}
     annotations = {}
 
     for example in prompt_data:
 
-        # Activate the task adapter
         task = example["task"]
+        print(f"Prompt id: {example['id']}    Task: {task}")
 
-        print(f"Prompt id: {example['id']}    Task: {example['task']}")
+        # Get the index of the adapter trained for the task
+        adapter = lora_tasks.index(task)
 
-        num_adaptors = 3
-        if example["task"] == "answer question":
-            adapter_selector = 0
-        elif example["task"] == "simplify text":
-            adapter_selector = 1
-        elif example["task"] == "classify news":
-            adapter_selector = 2
+        if task == "simplify text":
+            sampling_params = {"method": "top_k", "temperature": 0.8, "top_k": 20}
+        else:
+            sampling_params = {"method": "greedy"}
 
         model_inputs = {
             "input_ids": tf.constant([example["prompt_ids"]], dtype=tf.int32),
             "attention_mask": tf.constant([example["attention_mask"]], dtype=tf.int32),
-            "adapter_selector": tf.expand_dims(tf.one_hot(adapter_selector, num_adaptors, dtype=tf.float32), axis=0)
+            "adapter": tf.constant([adapter], dtype=tf.int32)
         }
-
-        sampling_method = "top_k" if task == "simplify text" else "greedy"
+        sampling_params = [sampling_params]
 
         tokens_out = generate_text(
             model,
             model_inputs=model_inputs,
             output_len=100,
-            sampling_method=sampling_method,
-            temperature=0.8,
-            top_k=20
+            sampling_params=sampling_params
         )
     
         model_responses[id] = postprocess_model_output(tokens_out[0])

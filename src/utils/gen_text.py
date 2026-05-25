@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 
 
-def sample_next_token(logits, sampling_method='greedy', temperature=1.0, top_k=0, top_p=1.0):
+def sample_next_token(logits, params):
     """
     Sample the next token from a language model's logits using different sampling methods.
 
@@ -19,69 +19,56 @@ def sample_next_token(logits, sampling_method='greedy', temperature=1.0, top_k=0
     Returns:
         next_token_ids: 1D numpy array of sampled token indices (batch_size,)
     """
-    batch_size, vocab_size = logits.shape
-    next_token_ids = np.zeros(batch_size, dtype=int)
+    
+    vocab_size = logits.shape
 
     def softmax(x):
         x = x.astype(np.float64)
         e = np.exp(x - np.max(x))
         return e / np.sum(e)
 
-    for i in range(batch_size):
-        if sampling_method == "greedy":
-            next_token_ids[i] = np.argmax(logits[i])
+    # Get parameter values applying defaults
+    method, temperature, top_k, top_p = (
+        params["method"],
+        params.get("temperature", 0.8),
+        params.get("top_k", 20),
+        params.get("top_p", 0.9),
+    )
 
-        elif sampling_method == "temperature":
-            probs = softmax(logits[i] / temperature)
-            next_token_ids[i] = np.random.choice(vocab_size, p=probs)
+    if method == "greedy":
+        next_token = np.argmax(logits)
 
-        elif sampling_method == "top_k":
-            logits_i = logits[i] / temperature
-            top_k_indices = np.argpartition(logits_i, -top_k)[-top_k:]
-            top_k_logits = logits_i[top_k_indices]
-            top_k_probs = softmax(top_k_logits)
-            next_token_ids[i] = np.random.choice(top_k_indices, p=top_k_probs)
+    elif method == "temperature":
+        probs = softmax(logits / temperature)
+        next_token = np.random.choice(vocab_size, p=probs)
 
-        elif sampling_method == "top_p":
-            probs = softmax(logits[i] / temperature)
-            sorted_indices = np.argsort(-probs)
-            sorted_probs = probs[sorted_indices]
-            cumsum_probs = np.cumsum(sorted_probs)
-            cutoff_idx = np.searchsorted(cumsum_probs, top_p)
-            cutoff_idx = max(1, cutoff_idx)
-            top_p_indices = sorted_indices[:cutoff_idx]
-            top_p_probs = sorted_probs[:cutoff_idx]
-            top_p_probs = top_p_probs / np.sum(top_p_probs)
-            next_token_ids[i] = np.random.choice(top_p_indices, p=top_p_probs)
+    elif method == "top_k":
+        scaled_logits = logits / temperature
+        top_k_indices = np.argpartition(scaled_logits, -top_k)[-top_k:]
+        top_k_logits = scaled_logits[top_k_indices]
+        top_k_probs = softmax(top_k_logits)
+        next_token = np.random.choice(top_k_indices, p=top_k_probs)
 
-    return next_token_ids
+    elif method == "top_p":
+        probs = softmax(logits / temperature)
+        sorted_indices = np.argsort(-probs)
+        sorted_probs = probs[sorted_indices]
+        cumsum_probs = np.cumsum(sorted_probs)
+        cutoff_idx = np.searchsorted(cumsum_probs, top_p)
+        cutoff_idx = max(1, cutoff_idx)
+        top_p_indices = sorted_indices[:cutoff_idx]
+        top_p_probs = sorted_probs[:cutoff_idx]
+        top_p_probs = top_p_probs / np.sum(top_p_probs)
+        next_token = np.random.choice(top_p_indices, p=top_p_probs)
 
+    return next_token
 
-def check_next_token_sampling_params(sampling_method, temperature, top_k, top_p):
-    if sampling_method not in ("greedy", "temperature", "top_k", "top_p"):
-        raise ValueError("Supported sampling methods are 'greedy', 'temperature', 'top_k', and 'top_p'")
-
-    if sampling_method in ("temperature", "top_k", "top_p"):
-        if temperature <= 0:
-            raise ValueError("temperature argument must be > 0")
-
-    if sampling_method == "top_k":
-        if top_k < 1:
-            raise ValueError("top-k argument must be >= 1")
-
-    if sampling_method == "top_p":
-        if top_p <= 0.0 or top_p > 1.0:
-            raise ValueError("top-p argument must be > 0.0 and <= 1.0")
-        
 
 def generate_text(
     model,
     model_inputs,
     output_len,
-    sampling_method="top_k",
-    temperature=0.8,
-    top_k=20,
-    top_p=1.0,
+    sampling_params
 ):
     """
     Generates output texts given a list of input prompts and a max number of output tokens.
@@ -98,13 +85,11 @@ def generate_text(
     Returns:
         List of output texts, one for each input prompt
     """
-    check_next_token_sampling_params(sampling_method, temperature, top_k, top_p)
 
     eos_token = 50256
 
     tokens_out = model_inputs["input_ids"].numpy()
     masks_out  = model_inputs["attention_mask"].numpy()
-    adapter_selector = model_inputs["adapter_selector"]
 
     batch_size = tokens_out.shape[0]
     finished = [False] * batch_size
@@ -118,7 +103,7 @@ def generate_text(
         hidden_states = model({
             "input_ids": tf.constant(tokens_out, dtype=tf.int32),
             "attention_mask": tf.constant(masks_out, dtype=tf.int32),
-            "adapter_selector": adapter_selector
+            "adapter": model_inputs["adapter"]
         }).numpy()
 
         # Get the indices of the last tokens before padding
@@ -126,22 +111,20 @@ def generate_text(
 
         logits = hidden_states[range(batch_size), last_token_indices, :]  # (batch, vocab_size)
 
-        predicted_tokens = sample_next_token(
-            logits,
-            sampling_method=sampling_method,
-            temperature=temperature,
-            top_k=top_k,
-            top_p=top_p
-        )
-
         pad_starts = masks_out.sum(axis=1)
+
         for b in range(batch_size):
             if finished[b]:
                 continue
-            if predicted_tokens[b] == eos_token:
+
+            # Sample the next token
+            next_token = sample_next_token(logits[b], sampling_params[b])
+
+            if next_token == eos_token:
                 finished[b] = True
                 continue
-            tokens_out[b, pad_starts[b]] = predicted_tokens[b]
+
+            tokens_out[b, pad_starts[b]] = next_token
             masks_out[b, pad_starts[b]] = 1
 
     return tokens_out
