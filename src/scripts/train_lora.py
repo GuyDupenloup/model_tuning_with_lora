@@ -19,6 +19,9 @@ def evaluate(model, test_ds):
 
 
 def train_squad_adapter(model, data_loaders):
+    """
+    Train the question answering adapter on squad dataset
+    """
 
     model.set_dropout_rate(0.1)
 
@@ -39,6 +42,9 @@ def train_squad_adapter(model, data_loaders):
 
 
 def train_wikilarge_adapter(model, data_loaders):
+    """
+    Train the text simplification adapter on wikilarge dataset
+    """
 
     model.set_dropout_rate(0.1)
 
@@ -74,6 +80,9 @@ def train_wikilarge_adapter(model, data_loaders):
 
 
 def train_ag_news_adapter(model, data_loaders):
+    """
+    Train the news classification adapter on ag_news dataset
+    """
 
     model.set_dropout_rate(0.1)
 
@@ -93,13 +102,19 @@ def train_ag_news_adapter(model, data_loaders):
 
 
 def train_model(project_root, model_size):
+    """"
+    Create a GPT-2 model with 3 LoRA adapters, load pretrained weights,
+    and train each adapter.
+    """
 
     if not os.path.isdir(project_root):
         raise FileNotFoundError(f"Unable to find project root directory {project_root}")
     
+    # Create the training directory if it does not exist
     train_dir = os.path.join(project_root, f"gpt2_{model_size}", "trained_models")
     os.makedirs(train_dir, exist_ok=True)
 
+    # Get the path to pretrained weights
     openai_filepath = os.path.join(
         project_root,
         f"gpt2_{model_size}", 
@@ -107,32 +122,38 @@ def train_model(project_root, model_size):
         f"openai_weights_gpt2_{model_size}.npz"
     )
 
+    # Set LoRA adapters indices
+    squad_adapter = 0
+    wikilarge_adapter = 1
+    ag_news_adapter = 2
+
+    # Create data loaders
     data_loaders = {}
     dataset_root = os.path.join(project_root, "datasets")
 
     data_loaders["squad"], _ = create_data_loaders(
         os.path.join(dataset_root, "squad"),
         batch_size=16,
-        adapter=0
+        adapter=squad_adapter
     )
     data_loaders["wikilarge"], _ = create_data_loaders(
         os.path.join(dataset_root, "wikilarge"),
         batch_size=16,
-        adapter=1
+        adapter=wikilarge_adapter
     )
     data_loaders["ag_news"], _ = create_data_loaders(
         os.path.join(dataset_root, "ag_news"),
         batch_size=16,
-        adapter=2
+        adapter=ag_news_adapter
     )
     
+    # Create GPT-2 model and load pretrained weights
     print(f"\nCreating gpt-2 model `{model_size}`")
-    adapter_tasks = ("answer question", "simplify text", "classify news")
     lora_config = {
         "num_adapters": 3,
         "rank": (16, 8, 8),
         "alpha": (32, 16, 16),
-        "tasks": adapter_tasks
+        "tasks": ("answer question", "simplify text", "classify news")
     }
     model = create_gpt2_language_model(
         model_size,
@@ -140,36 +161,25 @@ def train_model(project_root, model_size):
     )
     load_openai_gpt2_weights(model, openai_filepath)
     
-    #---------------------------------------------
-
-    print(f"\nTraining LoRA adapter 0 on `squad` dataset")
-    
-    model.lora_freeze(0)
+    # Train squad adapter
+    print(f"\nTraining LoRA adapter #{squad_adapter} on `squad` dataset")
+    model.lora_freeze(squad_adapter)  # Freeze all layers but question answering adapter
     print_model_variables(model)
-
     train_squad_adapter(model, data_loaders["squad"])
-    model.save(train_dir, "lora_adapters_squad")
 
-    #---------------------------------------------
-
-    print(f"\nTraining LoRA adapter 1 on `wikilarge` dataset")
-    
-    model.lora_freeze(1)
+    # Train wikilarge adapter
+    print(f"\nTraining LoRA adapter #{wikilarge_adapter} on `wikilarge` dataset")
+    model.lora_freeze(wikilarge_adapter)    # Freeze all layers but text simplification adapter
     print_model_variables(model)
-
     train_wikilarge_adapter(model, data_loaders["wikilarge"])
-    model.save(train_dir, "lora_adapters_wikilarge")
 
-    #---------------------------------------------
-
-    print(f"\nTraining LoRA adapter 2 on `ag_news` dataset")
-
-    model.lora_freeze(2)
+    # Train ag_news adapter
+    print(f"\nTraining LoRA adapter #{ag_news_adapter} on `ag_news` dataset")
+    model.lora_freeze(ag_news_adapter)    # Freeze all layers but news classification adapter
     print_model_variables(model)
-
     train_ag_news_adapter(model, data_loaders["ag_news"])
 
-    # Save the models with trained adapters
+    # Save the model with trained adapters
     model.save(train_dir, "lora_adapters")
 
 
@@ -187,7 +197,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--model_size",
-        help="Model size, one of '124M', '355M', '774M', '1542M'",
+        help="GPT-2 model size, one of ('124M', '355M', '774M', '1542M')",
         type=str,
         default="124M"
     )

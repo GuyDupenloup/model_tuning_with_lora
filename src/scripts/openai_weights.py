@@ -87,7 +87,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--model_size",
-        help="GPT-2 model size, one of '124M', '355M', '744M', '1.56B')",
+        help="GPT-2 model size, one of ('124M', '355M', '774M', '1542M')",
         type=str,
         default="124M"
     )

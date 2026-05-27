@@ -8,7 +8,12 @@ import numpy as np
 import tensorflow as tf
 
 
-def write_dataset_tfrecords(output_dir, metadata, train_data, val_data, test_data=None):
+def write_dataset_tfrecords(output_dir, metadata, train_data, val_data, test_data):
+    """
+    Write in output_dir directory:
+        - Training, validation, and test data to TFRecords
+        - Dataset metadata to JSON file
+    """
 
     def write_tfrecord(data, filepath):
         
@@ -30,25 +35,29 @@ def write_dataset_tfrecords(output_dir, metadata, train_data, val_data, test_dat
                 example = tf.train.Example(features=tf.train.Features(feature=feat))
                 writer.write(example.SerializeToString())
 
-    # Set up tfrecords output dir
+    # Create TFRecords directory if it does not exist
     if os.path.isdir(output_dir):
         shutil.rmtree(output_dir)
     os.makedirs(output_dir)
 
+    # Write metadata to JSON file
     metadata_path = os.path.join(output_dir, "metadata.json")
     with open(metadata_path, "w") as f:
         json.dump(metadata, f, indent=2)
 
+    # Write TFRecords files
     write_tfrecord(train_data, filepath=os.path.join(output_dir, "train.tfrecord"))
     write_tfrecord(val_data, filepath=os.path.join(output_dir, "val.tfrecord"))
-
-    if test_data is not None:
-        write_tfrecord(test_data, filepath=os.path.join(output_dir, "test.tfrecord"))
+    write_tfrecord(test_data, filepath=os.path.join(output_dir, "test.tfrecord"))
 
 
 def build_ds_pipeline(
     ds, seq_len, batch_size, adapter=None, shuffle=False, cache=False, buffer_size=1000
 ):
+    """
+    Build a tf.data.Dataset pipeline
+    """
+
     def parse_and_wrap(example_proto):
         feature_spec = {
             "input_ids": tf.io.FixedLenFeature([seq_len], tf.int64),
@@ -81,6 +90,23 @@ def build_ds_pipeline(
 
 
 def create_data_loaders(dataset_dir, batch_size, adapter=None):
+    """
+    Create training, validation and test tf.data.Dataset data loaders
+    from TFRecords files saved by the write_dataset_tfrecords() function.
+
+    The optional `adapter` argument is used to provide the index of a LoRA adapter.
+    The data loaders replicates it in every item of every batch.
+
+    The function returns:
+        - The dataset metadata (data sizes, sequence length, etc)
+        - A training, validation and test tf.data.Dataset data loaders
+
+    Each data loader returns a batch of dictionaries, each of them containing:
+        - Token IDs of the prompt and annotation
+        - Attention mask to use to hide the pad tokens from the attention heads
+        - Loss mask to use to only include the model answer in the loss calculation
+        - Adapter index if used
+    """
 
     if not os.path.isdir(dataset_dir):
         raise FileNotFoundError(f"Unable to find dataset directory {dataset_dir}")

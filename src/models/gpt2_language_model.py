@@ -27,8 +27,12 @@ class GPT2LanguageModel(tf.keras.models.Model):
 
         lora_config:
             Optional LoRA configuration, a dictionary.
-            If present, keys must include 'num_adapters, 'rank' and 'alpha'. The values of 'alpha' and 'rank'
-            must be tuples of positive integers with length equal to 'num_adapters'.
+            Keys must include:
+                'num_adapters': number of LoRA adapter.
+                'rank': rank parameter of LoRA adapters
+                'alpha': alpha parameter of LoRA adapters
+            'rank' and 'alpha' must be tuples (lists not accepted) of positive integers 
+            with length equal to 'num_adapters'.
             If the argument is not present, no LoRA layers are added to the model.
 
     Model call() method:
@@ -77,32 +81,6 @@ class GPT2LanguageModel(tf.keras.models.Model):
         self.test_accuracy_tracker = tf.keras.metrics.Mean(name="accuracy")
         self.test_perplexity_tracker =  tf.keras.metrics.Mean(name="perplexity")
 
-    # Set the dropout rate of all dropout layers
-    def set_dropout_rate(self, dropout_rate):
-        self.gpt2_model.set_dropout_rate(dropout_rate)
-
-    # Freeze all the weights of the model except the adapter in argument
-    def lora_freeze(self, adapter_idx):
-        self.gpt2_model.lora_freeze(adapter_idx)
-
-    # Save the configuration of the model in a JSON file
-    # and its weights in a "weights.h5" file. The model
-    # can be reloaded using these two files.
-    def save(self, model_dir, model_name):
-        if not os.path.isdir(model_dir):
-            os.makedirs(model_dir, exist_ok=True)
-
-        # Save model and LoRA config
-        config = {"model_config": self.model_config}
-        if self.lora_config is not None:
-            config["lora_config"] = self.lora_config
-        with open(os.path.join(model_dir, f"{model_name}.json"), "w") as f:
-            json.dump(config, indent=2, fp=f)
-
-        # Save model weights
-        self.save_weights(os.path.join(model_dir, f"{model_name}.weights.h5"))
-
-
     def call(self, inputs, training=None):
         """
         Forward pass through language model.
@@ -131,6 +109,33 @@ class GPT2LanguageModel(tf.keras.models.Model):
         logits = tf.matmul(gpt2_output, embedding_weights, transpose_b=True)
 
         return logits
+
+
+    # Set the dropout rate of all dropout layers
+    def set_dropout_rate(self, dropout_rate):
+        self.gpt2_model.set_dropout_rate(dropout_rate)
+
+    # Freeze all the weights of the model except the adapter in argument
+    def lora_freeze(self, adapter_idx):
+        self.gpt2_model.lora_freeze(adapter_idx)
+
+    # Save the configuration of the model in a JSON file
+    # and its weights in a "weights.h5" file. The model
+    # can be reloaded using these two files.
+    def save(self, model_dir, model_name):
+        if not os.path.isdir(model_dir):
+            os.makedirs(model_dir, exist_ok=True)
+
+        # Save model and LoRA config
+        config = {"model_config": self.model_config}
+        if self.lora_config is not None:
+            config["lora_config"] = self.lora_config
+        with open(os.path.join(model_dir, f"{model_name}.json"), "w") as f:
+            json.dump(config, indent=2, fp=f)
+
+        # Save model weights
+        self.save_weights(os.path.join(model_dir, f"{model_name}.weights.h5"))
+
 
     def compute_loss(self, input_ids, y_pred, mask):
         """

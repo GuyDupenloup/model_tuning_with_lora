@@ -15,7 +15,7 @@ In this project, I experimented with tuning a GPT-2 model for the following appl
 
 My goals were as follows:
 
-1. Create a GPT-2 model with built-in LoRA adapters, along with the full pipeline required to train and evaluate models, and manage the adapters.
+1. Create a GPT-2 model with built-in LoRA adapters, along with the full pipeline required to train and evaluate models, and run inference using batches of prompts that use different adapters.
 
 2. Get hands-on experience with fine-tuning a model to perform multiple tasks, comparing sequential fine-tuning of the same model and multiple LoRA adapters.
 
@@ -110,17 +110,17 @@ Each saved model consists of two files:
            |        └── openai_weights_gpt2_124M.npz
            |
            ├── trained_models
-           |        |
-           |        ├── squad_baseline.json, squad_baseline.weights.h5          # Created by script `train.py`
+           |        | 
+           |        ├── squad_baseline.json, squad_baseline.weights.h5   # Created by script `train.py`
            |        ├── wikilarge_baseline.json, wikilarge_baseline.weights.h5
            |        ├── ag_news_baseline.json, ag_news_baseline.weights.h5
            |        |
-           |        └── lora_adapters.json, lora_adapters.weights.h5            # Created by script `train_lora.py`
+           |        └── lora_adapters.json, lora_adapters.weights.h5    # Created by script `train_lora.py`
            |
            └── tests
                  |
                  ├── example_prompts.json
-                 └── model_responses.txt                        # Created by script `test_prompts.py`
+                 └── model_responses.txt          # Created by script `test_prompts.py`
 ```
 
 ### 3.2 Running the project scripts
@@ -319,11 +319,11 @@ The results I obtained are summarized in the table below.
 
 |   LoRA adapter      |  Trainable parameters  |  Train set  |  Validation set  |  Test set  |
 |---------------------|------------------------|-------------|------------------|------------|
-|   SQuAD             |  2.21M (rank=16)       |    39.6     |   43.6           |    43.6    |
-|   wikilarge         |  1.1M (rank=8)         |    4.15     |   3.9507         |    3.33    |
-|   ag_news           |  1.1M (rank=8)         |    92.9     |    94.1          |    93.8    |
+|   SQuAD             |  2.21M (rank=16)       |    39.7     |   44.2           |    44.2    |
+|   wikilarge         |  1.1M (rank=8)         |    4.15     |   3.95           |    3.35    |
+|   ag_news           |  1.1M (rank=8)         |    92.9     |    93.0          |    93.0    |
 
-For SQuAD, the adapter reaches 43.6% versus 45.8% for the baseline (I could get to the baseline with larger adapters, but with diminishing results). For wikilarge, the adapter reaches the same perplexity as the baseline at ~3.3. For ag_news, the adapter achieves 93.8% versus 92.4% for the baseline.
+For SQuAD, the adapter reaches 44.2% versus 45.8% for the baseline (I could get to the baseline with larger adapters, but with diminishing results). For wikilarge, the adapter reaches the same perplexity as the baseline at ~3.3. For ag_news, the adapter achieves 93.0% versus 92.4% for the baseline.
 
 Note that all adapters are more or less under-fitted, which is probably a consequence of the small number of trainable parameters of each adapter.
 
@@ -436,8 +436,8 @@ In ID 115, the news is about researchers discovering that some diseases are infl
 
 ## 8. Conclusion
 
-This project gave me hands-on experience with the full fine-tuning pipeline for a GPT-2 model, from dataset preparation to training, evaluation, and prompt analysis.
+This project gave me hands-on experience with the full fine-tuning pipeline for a GPT-2 model, from dataset preparation to training, evaluation, inference, and prompt analysis.
 
 The sequential training experiments clearly illustrated the catastrophic forgetting problem: fine-tuning a single model on multiple tasks sequentially destroys previously acquired capabilities. LoRA adapters provide an efficient solution. Using three adapters totaling 4.4M parameters, which represents only a 3.5% of the base model parameters, the model achieves near-baseline performance on all three tasks simultaneously, without touching the original weights during adapter training.
 
-The prompt analysis revealed that raw accuracy metrics can be misleading. The SQuAD model's 45.9% exact-match accuracy underestimates its actual usefulness, while the wikilarge model's good perplexity score does not reflect its strong tendency to hallucinate. This exercise showed me how essential qualitative analysis is alongside quantitative metrics.
+The prompt analysis revealed that raw accuracy metrics can be misleading. The SQuAD model's 45.8% exact-match accuracy underestimates its actual usefulness, while the wikilarge model's good perplexity score does not reflect its strong tendency to hallucinate. This exercise showed me how essential qualitative analysis is alongside quantitative metrics.
