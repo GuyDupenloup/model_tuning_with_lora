@@ -11,52 +11,35 @@ from models.gpt2_model import GPT2Model
 class GPT2LanguageModel(tf.keras.models.Model):
     """
     Implements OpenAI's GPT-2 model with language modelling head.
-    
-    The model calculates loss, and metrics including perplexity and accuracy (exact token-to-token match).
+    The model calculates loss and metrics including perplexity 
+    and exact-match accuracy.
 
-    Model instantiation arguments:
-    -----------------------------
+    The model can be trained using the fit() method and evaluated 
+    using the evaluate() method.
+
+    Arguments:
         model_config:
-            The model configuration, a dictionary.
-            Keys must include:
-                'vocab_size': vocabulary size
-                'max_seq_len': input sequence maximum length (context size)
-                'd_model': hidden state size (embeddings size)
-                'n_layers': number of transformer blocks
-                'n_heads': number of attention heads
+            A dictionary, the model configuration parameters.
+            Items include:
+                "vocab_size": vocabulary size
+                "max_seq_len": input sequence maximum length (context size)
+                "d_model": hidden state size (embeddings size)
+                "n_layers": number of transformer blocks
+                "n_heads": number of attention heads
+            These parameters for a given model size can be obtained using
+            the get_gpt2_model_config() function in model_utils.py.
 
         lora_config:
-            Optional LoRA configuration, a dictionary.
-            Keys must include:
-                'num_adapters': number of LoRA adapter.
-                'rank': rank parameter of LoRA adapters
-                'alpha': alpha parameter of LoRA adapters
-            'rank' and 'alpha' must be tuples (lists not accepted) of positive integers 
-            with length equal to 'num_adapters'.
-            If the argument is not present, no LoRA layers are added to the model.
-
-    Model call() method:
-    -------------------
-        Arguments:
-            inputs:
-                A dictionary with the following items:
-                    'input_ids':
-                        Token IDs of the input sequence.
-                        A tf.tensor with shape (batch_size, seq_len) and data type tf.int32
-                    'attention mask':
-                        Attention mask used to remove padding tokens from consideration.
-                        0: ignored, 1: considered
-                        A tf.tensor with shape (batch_size, seq_len) and data type tf.int32
-                    'loss_mask':
-                        Loss mask to exclude some of the tokens in the prompt from loss calculation.
-                        0: excluded, 1: included
-                        A tf.tensor with shape (batch_size, seq_len) and data type tf.int32
-                    'adapter_selector':
-                        An integer, the index of the LoRA adapter to activate
-
-        Returns:
-            Hidden state logits over vocabulary
-            A tf.Tensor of with shape (batch_size, seq_len, vocab_size) and data_type tf.float32
+            An optional dictionary, the LoRA layers configuration.
+            Specifies the number of adapters, and the rank and alpha
+            parameters of each LoRA layer.
+            Example:
+                lora_config = {
+                    "num_adapters": 3,     # Number of adapters
+                    "rank": (16, 8, 8),    # rank parameter of each adapter
+                    "alpha": (32, 16, 16)  # alpha parameter of each adapter (same order as in rank)
+                }
+            If `lora_config` is None, the model has no LoRA adapter.
     """
 
     def __init__(self, model_config, lora_config=None, name=None, **kwargs):
@@ -81,9 +64,31 @@ class GPT2LanguageModel(tf.keras.models.Model):
         self.test_accuracy_tracker = tf.keras.metrics.Mean(name="accuracy")
         self.test_perplexity_tracker =  tf.keras.metrics.Mean(name="perplexity")
 
+
     def call(self, inputs, training=None):
         """
-        Forward pass through language model.
+        Forward pass through the GPT-2 LM model.
+
+        Arguments:
+            inputs:
+                A batch of dictionaries, each of them with the following items:
+                    "token_ids": 
+                        Token IDs of the prompt and annotation
+                        Shape: (batch, seq_len)
+                    "attention_mask":
+                        Mask specifying which token positions to attend to (hides pad tokens)
+                        Shape: (batch, seq_len)
+                    "loss_mask":
+                        Mask specifying which token positions contribute to the loss
+                        Shape: (batch, seq_len)
+                    "adapter": index of the active LoRA adapter. If None, the model
+                        has no LoRA adapters, or it does but none of them is activated.
+                        Shape: (batch)
+            training:
+                Training or evaluation mode.
+
+        Returns:
+            The logits, a tensor with shape (batch, seq_len, vocab_size)
         """
 
         if "adapter" in inputs:
@@ -103,8 +108,8 @@ class GPT2LanguageModel(tf.keras.models.Model):
             training=training
         )
 
-        # Output linear layer that projects hidden state representations to vocabulary.
-        # Weights of the projection matrix are shared with the token embedding matrix.
+        # Output linear layer that projects hidden state representations 
+        # to vocabulary. Weights are shared with the token embedding matrix.
         embedding_weights = self.gpt2_model.token_embed_layer.embeddings
         logits = tf.matmul(gpt2_output, embedding_weights, transpose_b=True)
 
@@ -115,13 +120,12 @@ class GPT2LanguageModel(tf.keras.models.Model):
     def set_dropout_rate(self, dropout_rate):
         self.gpt2_model.set_dropout_rate(dropout_rate)
 
-    # Freeze all the weights of the model except the adapter in argument
+    # Freeze all the weights of the model except the adapter with the index in argument
     def lora_freeze(self, adapter_idx):
         self.gpt2_model.lora_freeze(adapter_idx)
 
-    # Save the configuration of the model in a JSON file
-    # and its weights in a "weights.h5" file. The model
-    # can be reloaded using these two files.
+    # Save the configuration of the model (including the LoRA configuration
+    # if any) in a JSON file and its weights in a Keras weights.h5 file.
     def save(self, model_dir, model_name):
         if not os.path.isdir(model_dir):
             os.makedirs(model_dir, exist_ok=True)
@@ -139,18 +143,18 @@ class GPT2LanguageModel(tf.keras.models.Model):
 
     def compute_loss(self, input_ids, y_pred, mask):
         """
-        Calculates the loss.
+        Calculates the categorical crossentropy loss.
 
         Arguments:
             input_ids: 
-                Token IDs of the input sequence.
-                Shape: (batch_size, seq_len)
+                Token IDs of the input sequence
+                Shape: (batch, seq_len)
             y_pred:
-                Model predictions (logits over the vocabulary).
-                Shape: (batch_size, seq_len, vocab_size)
+                Model predictions (logits over the vocabulary)
+                Shape: (batch, seq_len, vocab_size)
             mask:
-                Mask specifying which token positions contribute to the loss.
-                Shape: (batch_size, seq_len)
+                Mask specifying which token positions contribute to the loss
+                Shape: (batch, seq_len)
         """
 
         # Shift inputs to get labels
@@ -176,6 +180,21 @@ class GPT2LanguageModel(tf.keras.models.Model):
 
 
     def compute_accuracy(self, input_ids, y_pred, mask):
+        """
+        Calculates the exact-match accuracy.
+
+        Arguments:
+            input_ids: 
+                Token IDs of the input sequence
+                Shape: (batch_size, seq_len)
+            y_pred:
+                Model predictions (logits over the vocabulary)
+                Shape: (batch_size, seq_len, vocab_size)
+            mask:
+                Mask specifying which token positions contribute to the loss
+                Shape: (batch_size, seq_len)
+
+        """
         y_true = input_ids[:, 1:]
         mask = mask[:, 1:]
         y_pred = y_pred[:, :-1, :]
@@ -203,9 +222,16 @@ class GPT2LanguageModel(tf.keras.models.Model):
 
     def train_step(self, inputs):
         """
-        Performs one training step using next-token prediction.
-        Computes the forward pass, loss, gradients, and updates model weights.
-        Also updates accuracy and perplexity metrics based on the masked tokens.
+        Performs one training step.
+        Argument `inputs`:
+            A batch of dictionaries. Shape: (batch_size)
+            Each dictionary has the following items:
+                "input_ids":
+                    Token IDs sequence
+                    Shape: (batch_size, seq_len)
+                "loss_mask":
+                    Mask specifying which token positions contribute to the loss
+                    Shape: (batch_size, seq_len)
         """
 
         input_ids = inputs["input_ids"]
@@ -223,10 +249,11 @@ class GPT2LanguageModel(tf.keras.models.Model):
         ]
         self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
 
-        # Metrics
+        # Calculate metrics
         accuracy = self.compute_accuracy(input_ids, y_pred, loss_mask)
         perplexity = tf.exp(loss)
 
+        # Update loss and metrics trackers
         self.train_loss_tracker.update_state(loss)
         self.train_accuracy_tracker.update_state(accuracy)
         self.train_perplexity_tracker.update_state(perplexity)
@@ -240,9 +267,7 @@ class GPT2LanguageModel(tf.keras.models.Model):
 
     def test_step(self, inputs):
         """
-        Runs a forward pass without gradient updates and computes evaluation loss.
-        Updates accuracy and perplexity using the same masked next-token objective.
-        Returns the current values of all tracked evaluation metrics.
+        Performs one evaluation step. Same arguments as train_step().
         """
         input_ids = inputs["input_ids"]
         loss_mask = inputs["loss_mask"]
@@ -267,7 +292,7 @@ class GPT2LanguageModel(tf.keras.models.Model):
         ]}
 
 
-    # Register trackers
+    # Register loss and metrics trackers
     @property
     def metrics(self):
         return [
@@ -282,7 +307,7 @@ class GPT2LanguageModel(tf.keras.models.Model):
     def get_config(self):
         config = super().get_config()
         config.update({
-            "model_config": self.model_config,          # set as self.config in __init__
+            "model_config": self.model_config,
             "lora_config": self.lora_config
         })
         return config

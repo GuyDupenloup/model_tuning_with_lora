@@ -10,7 +10,7 @@ import tensorflow as tf
 
 def write_dataset_tfrecords(output_dir, metadata, train_data, val_data, test_data):
     """
-    Write in output_dir directory:
+    Write in `output_dir` directory:
         - Training, validation, and test data to TFRecords
         - Dataset metadata to JSON file
     """
@@ -92,20 +92,28 @@ def build_ds_pipeline(
 def create_data_loaders(dataset_dir, batch_size, adapter=None):
     """
     Create training, validation and test tf.data.Dataset data loaders
-    from TFRecords files saved by the write_dataset_tfrecords() function.
+    from TFRecord files saved by the write_dataset_tfrecords() function.
 
     The optional `adapter` argument is used to provide the index of a LoRA adapter.
     The data loaders replicates it in every item of every batch.
 
-    The function returns:
-        - The dataset metadata (data sizes, sequence length, etc)
-        - A training, validation and test tf.data.Dataset data loaders
+    Each data loader returns a batch of dictionaries, each of them with
+    the following items:
+        "token_ids": 
+            Token IDs of the prompt and annotation
+            Shape: (batch, seq_len)
+        "attention_mask":
+            Mask specifying token positions to attend to (hides pad tokens)
+            Shape: (batch, seq_len)
+        "loss_mask":
+            Mask specifying which token positions contribute to the loss
+            Shape: (batch, seq_len)
+        "adapter": optional index of the active LoRA adapter.
+            Shape: (batch)
 
-    Each data loader returns a batch of dictionaries, each of them containing:
-        - Token IDs of the prompt and annotation
-        - Attention mask to use to hide the pad tokens from the attention heads
-        - Loss mask to use to only include the model answer in the loss calculation
-        - Adapter index if used
+    Returns:
+        - The dataset metadata dict (data sizes, sequence length, etc)
+        - Training, validation and test tf.data.Dataset data loaders
     """
 
     if not os.path.isdir(dataset_dir):
