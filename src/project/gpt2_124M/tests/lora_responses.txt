@@ -10,7 +10,7 @@ id: 0
 
 ### Answer: four
 ----------------------------------------
-Dataset annotation: eight
+Reference: eight
 
 ================================================================================
 id: 1
@@ -23,7 +23,7 @@ id: 1
 
 ### Answer: two
 ----------------------------------------
-Dataset annotation: Super Bowl XXXVIII.
+Reference: Super Bowl XXXVIII.
 
 ================================================================================
 id: 2
@@ -36,7 +36,7 @@ id: 2
 
 ### Answer: KOA
 ----------------------------------------
-Dataset annotation: KRFX
+Reference: KRFX
 
 ================================================================================
 id: 3
@@ -49,7 +49,7 @@ id: 3
 
 ### Answer: 21
 ----------------------------------------
-Dataset annotation: 21
+Reference: 21
 
 ================================================================================
 id: 4
@@ -62,7 +62,7 @@ id: 4
 
 ### Answer: General Sejm
 ----------------------------------------
-Dataset annotation: General Sejm
+Reference: General Sejm
 
 ================================================================================
 id: 5
@@ -75,7 +75,7 @@ id: 5
 
 ### Answer: almost a month
 ----------------------------------------
-Dataset annotation: almost a month
+Reference: almost a month
 
 ================================================================================
 id: 6
@@ -88,7 +88,7 @@ id: 6
 
 ### Answer: teach a large class of students
 ----------------------------------------
-Dataset annotation: taught
+Reference: taught
 
 ================================================================================
 id: 7
@@ -101,7 +101,7 @@ id: 7
 
 ### Answer: ditch digger
 ----------------------------------------
-Dataset annotation: various electrical repair jobs
+Reference: various electrical repair jobs
 
 ================================================================================
 id: 8
@@ -114,7 +114,7 @@ id: 8
 
 ### Answer: go home
 ----------------------------------------
-Dataset annotation: go home and change
+Reference: go home and change
 
 ================================================================================
 id: 9
@@ -127,7 +127,7 @@ id: 9
 
 ### Answer: No Child Left Behind
 ----------------------------------------
-Dataset annotation: No Child Left Behind
+Reference: No Child Left Behind
 
 ================================================================================
 id: 10
@@ -140,7 +140,7 @@ id: 10
 
 ### Answer: Luther's rediscovery of "Christ and His salvation"
 ----------------------------------------
-Dataset annotation: Christ and His salvation
+Reference: Christ and His salvation
 
 ================================================================================
 id: 11
@@ -153,7 +153,7 @@ id: 11
 
 ### Answer: a questionable and originally unintended development towards a church government
 ----------------------------------------
-Dataset annotation: under the temporal sovereign
+Reference: under the temporal sovereign
 
 ================================================================================
 id: 12
@@ -166,7 +166,7 @@ id: 12
 
 ### Answer: as agents of the Biblical apocalypse
 ----------------------------------------
-Dataset annotation: to punish Christians
+Reference: to punish Christians
 
 ================================================================================
 id: 13
@@ -179,7 +179,7 @@ id: 13
 
 ### Answer: college sports
 ----------------------------------------
-Dataset annotation: College
+Reference: College
 
 ================================================================================
 id: 14
@@ -192,7 +192,7 @@ id: 14
 
 ### Answer: Sky+
 ----------------------------------------
-Dataset annotation: Sky+
+Reference: Sky+
 
 ================================================================================
 id: 15
@@ -205,7 +205,7 @@ id: 15
 
 ### Answer: substantially more value
 ----------------------------------------
-Dataset annotation: substantially increased the asking price
+Reference: substantially increased the asking price
 
 ================================================================================
 id: 16
@@ -218,7 +218,7 @@ id: 16
 
 ### Answer: 1689
 ----------------------------------------
-Dataset annotation: 1700
+Reference: 1700
 
 ================================================================================
 id: 17
@@ -231,7 +231,7 @@ id: 17
 
 ### Answer: Turnagain Lane
 ----------------------------------------
-Dataset annotation: a restaurant
+Reference: a restaurant
 
 ================================================================================
 id: 18
@@ -246,7 +246,7 @@ id: 18
 
 ### Answer: 14.6 mg·L−1
 ----------------------------------------
-Dataset annotation: twice
+Reference: twice
 
 ================================================================================
 id: 19
@@ -259,7 +259,7 @@ id: 19
 
 ### Answer: over half
 ----------------------------------------
-Dataset annotation: The Amazon represents over half of the planet's remaining rainforests
+Reference: The Amazon represents over half of the planet's remaining rainforests
 
 ================================================================================
 id: 20
@@ -272,7 +272,7 @@ id: 20
 
 ### Answer: to protect their tribal lands from commercial interests
 ----------------------------------------
-Dataset annotation: to protect their tribal lands from commercial interests
+Reference: to protect their tribal lands from commercial interests
 
 ================================================================================
 id: 21
@@ -285,7 +285,7 @@ id: 21
 
 ### Answer: comb
 ----------------------------------------
-Dataset annotation: κτείς kteis 'comb' and φέρω pherō 'carry'
+Reference: κτείς kteis 'comb' and φέρω pherō 'carry'
 
 ================================================================================
 id: 22
@@ -298,7 +298,7 @@ id: 22
 
 ### Answer: Fresno
 ----------------------------------------
-Dataset annotation: Fresno
+Reference: Fresno
 
 ================================================================================
 id: 23
@@ -311,7 +311,7 @@ id: 23
 
 ### Answer: less than 50%
 ----------------------------------------
-Dataset annotation: most isolated areas
+Reference: most isolated areas
 
 ================================================================================
 id: 24
@@ -324,7 +324,7 @@ id: 24
 
 ### Answer: 16th
 ----------------------------------------
-Dataset annotation: 16th century
+Reference: 16th century
 
 ================================================================================
 id: 25
@@ -337,7 +337,7 @@ id: 25
 
 ### Answer: Architects
 ----------------------------------------
-Dataset annotation: Architects
+Reference: Architects
 
 ================================================================================
 id: 26
@@ -350,7 +350,7 @@ id: 26
 
 ### Answer: Roy
 ----------------------------------------
-Dataset annotation: Roy
+Reference: Roy
 
 ================================================================================
 id: 27
@@ -363,7 +363,7 @@ id: 27
 
 ### Answer: Disney–ABC International Television
 ----------------------------------------
-Dataset annotation: Disney–ABC Domestic Television
+Reference: Disney–ABC Domestic Television
 
 ================================================================================
 id: 28
@@ -376,7 +376,7 @@ id: 28
 
 ### Answer: 96.26%
 ----------------------------------------
-Dataset annotation: 96.26%
+Reference: 96.26%
 
 ================================================================================
 id: 29
@@ -389,7 +389,7 @@ id: 29
 
 ### Answer: separation
 ----------------------------------------
-Dataset annotation: fragmentation
+Reference: fragmentation
 
 ================================================================================
 id: 30
@@ -402,7 +402,7 @@ id: 30
 
 ### Answer: genghis
 ----------------------------------------
-Dataset annotation: Zhèng
+Reference: Zhèng
 
 ================================================================================
 id: 31
@@ -415,7 +415,7 @@ id: 31
 
 ### Answer: passive
 ----------------------------------------
-Dataset annotation: passive immunity
+Reference: passive immunity
 
 ================================================================================
 id: 32
@@ -428,7 +428,7 @@ id: 32
 
 ### Answer: Glucocorticoids
 ----------------------------------------
-Dataset annotation: Glucocorticoids
+Reference: Glucocorticoids
 
 ================================================================================
 id: 33
@@ -441,7 +441,7 @@ id: 33
 
 ### Answer: coercive
 ----------------------------------------
-Dataset annotation: coercive
+Reference: coercive
 
 ================================================================================
 id: 34
@@ -454,7 +454,7 @@ id: 34
 
 ### Answer: Auckland
 ----------------------------------------
-Dataset annotation: Auckland
+Reference: Auckland
 
 ================================================================================
 id: 35
@@ -467,7 +467,7 @@ id: 35
 
 ### Answer: New York–based filmmakers
 ----------------------------------------
-Dataset annotation: New York–based filmmakers
+Reference: New York–based filmmakers
 
 ================================================================================
 id: 36
@@ -480,7 +480,7 @@ id: 36
 
 ### Answer: white flight
 ----------------------------------------
-Dataset annotation: "white flight"
+Reference: "white flight"
 
 ================================================================================
 id: 37
@@ -493,7 +493,7 @@ id: 37
 
 ### Answer: Professional and labor organizations
 ----------------------------------------
-Dataset annotation: Professional and labor organizations
+Reference: Professional and labor organizations
 
 ================================================================================
 id: 38
@@ -506,7 +506,7 @@ id: 38
 
 ### Answer: The Space Museum
 ----------------------------------------
-Dataset annotation: The Space Museum
+Reference: The Space Museum
 
 ================================================================================
 id: 39
@@ -519,7 +519,7 @@ id: 39
 
 ### Answer: 2008
 ----------------------------------------
-Dataset annotation: 2008
+Reference: 2008
 
 ================================================================================
 id: 40
@@ -532,7 +532,7 @@ id: 40
 
 ### Answer: Mongols' extensive West Asian and European contacts
 ----------------------------------------
-Dataset annotation: The Mongols' extensive West Asian and European contacts
+Reference: The Mongols' extensive West Asian and European contacts
 
 ================================================================================
 id: 41
@@ -545,7 +545,7 @@ id: 41
 
 ### Answer: Joe Barton
 ----------------------------------------
-Dataset annotation: Ed Whitfield
+Reference: Ed Whitfield
 
 ================================================================================
 id: 42
@@ -558,7 +558,7 @@ id: 42
 
 ### Answer: energize electrons
 ----------------------------------------
-Dataset annotation: energize electrons
+Reference: energize electrons
 
 ================================================================================
 id: 43
@@ -571,7 +571,7 @@ id: 43
 
 ### Answer: filaments
 ----------------------------------------
-Dataset annotation: proteins
+Reference: proteins
 
 ================================================================================
 id: 44
@@ -584,7 +584,7 @@ id: 44
 
 ### Answer: that any object can be, essentially uniquely, decomposed into its prime components
 ----------------------------------------
-Dataset annotation: any object can be, essentially uniquely, decomposed into its prime components
+Reference: any object can be, essentially uniquely, decomposed into its prime components
 
 ================================================================================
 id: 45
@@ -597,7 +597,7 @@ id: 45
 
 ### Answer: Thurgau and St. Gallen
 ----------------------------------------
-Dataset annotation: 47°39′N 9°19′E﻿ / ﻿47.650°N 9.317°E﻿ / 47.650; 9.317.
+Reference: 47°39′N 9°19′E﻿ / ﻿47.650°N 9.317°E﻿ / 47.650; 9.317.
 
 ================================================================================
 id: 46
@@ -610,7 +610,7 @@ id: 46
 
 ### Answer: Scotland
 ----------------------------------------
-Dataset annotation: Schedule 5
+Reference: Schedule 5
 
 ================================================================================
 id: 47
@@ -623,7 +623,7 @@ id: 47
 
 ### Answer: 4-week period
 ----------------------------------------
-Dataset annotation: a 4-week period
+Reference: a 4-week period
 
 ================================================================================
 id: 48
@@ -636,7 +636,7 @@ id: 48
 
 ### Answer: Islamisation of pan-Arabism
 ----------------------------------------
-Dataset annotation: sharia rather than the building of Islamic institutions,
+Reference: sharia rather than the building of Islamic institutions,
 
 ================================================================================
 id: 49
@@ -649,7 +649,7 @@ id: 49
 
 ### Answer: lack of experience in managing large expeditions
 ----------------------------------------
-Dataset annotation: efforts to fortify Oswego were bogged down in logistical difficulties, exacerbated by Shirley's inexperience
+Reference: efforts to fortify Oswego were bogged down in logistical difficulties, exacerbated by Shirley's inexperience
 
 ================================================================================
 id: 50
@@ -660,7 +660,7 @@ id: 50
 
 ### Simplified: In his next book , Saturday , he lives with many people .
 ----------------------------------------
-Dataset annotation: His next work at Saturday will be a successful neurosurgeon .
+Reference: His next work at Saturday will be a successful neurosurgeon .
 
 ================================================================================
 id: 51
@@ -671,7 +671,7 @@ id: 51
 
 ### Simplified: The tarantula , the trickster , twisted a black cord and pulled on the cord with all his strength .
 ----------------------------------------
-Dataset annotation: The tarantuala , the trickster , spun a black chord and attached it to the ball , crawling away fast to the east and pulling the chord with all his strength .
+Reference: The tarantuala , the trickster , spun a black chord and attached it to the ball , crawling away fast to the east and pulling the chord with all his strength .
 
 ================================================================================
 id: 52
@@ -682,7 +682,7 @@ id: 52
 
 ### Simplified: In 888 he died six weeks later on January 13 , 888 .
 ----------------------------------------
-Dataset annotation: He died six weeks later on January 13th 888 .
+Reference: He died six weeks later on January 13th 888 .
 
 ================================================================================
 id: 53
@@ -693,7 +693,7 @@ id: 53
 
 ### Simplified: Following the drums are dancers , who often play the sogo or a little drum that makes almost no sound .
 ----------------------------------------
-Dataset annotation: The drummers are dancers and often play the sogo which they tend to have arcobatic choreography .
+Reference: The drummers are dancers and often play the sogo which they tend to have arcobatic choreography .
 
 ================================================================================
 id: 54
@@ -704,7 +704,7 @@ id: 54
 
 ### Simplified: Mazzola ( born 8 November 1942 ) is an Italian football player .
 ----------------------------------------
-Dataset annotation: Alessandro Mazzola is an Italian former football player .
+Reference: Alessandro Mazzola is an Italian former football player .
 
 ================================================================================
 id: 55
@@ -715,7 +715,7 @@ id: 55
 
 ### Simplified: He was also named 1982 Sportsman of the Year by Sports Illustrated .
 ----------------------------------------
-Dataset annotation: Sports Illustrated named him '' Sportsman of the Year '' in 1982 .
+Reference: Sports Illustrated named him '' Sportsman of the Year '' in 1982 .
 
 ================================================================================
 id: 56
@@ -726,7 +726,7 @@ id: 56
 
 ### Simplified: It is the oldest museum in Scotland , and the largest in England .
 ----------------------------------------
-Dataset annotation: Both names are no longer used and were combined as the National Musuemof Scotland
+Reference: Both names are no longer used and were combined as the National Musuemof Scotland
 
 ================================================================================
 id: 57
@@ -737,7 +737,7 @@ id: 57
 
 ### Simplified: Ventura pinned Eddie Guerrero ( with Chyna ) after a Diving elbow drop .
 ----------------------------------------
-Dataset annotation: Perry Saturn and Terri defeated Eddie Guerrero and Chyna to win the WWF European Championship ( 8:10 ) Saturn pinned Guerrero after a Diving elbow drop .
+Reference: Perry Saturn and Terri defeated Eddie Guerrero and Chyna to win the WWF European Championship ( 8:10 ) Saturn pinned Guerrero after a Diving elbow drop .
 
 ================================================================================
 id: 58
@@ -748,7 +748,7 @@ id: 58
 
 ### Simplified: Small pieces of colored and iridescent shell have been used to decorate walls , furniture and boxes .
 ----------------------------------------
-Dataset annotation: Small pieces of colored and shiny shell has been used to decorate walls , furniture and boxes .
+Reference: Small pieces of colored and shiny shell has been used to decorate walls , furniture and boxes .
 
 ================================================================================
 id: 59
@@ -759,7 +759,7 @@ id: 59
 
 ### Simplified: The other incorporated cities on the Palos Verdes Peninsula include Rancho Palos Verdes , Rolling Hills Estates and Rolling Hills .
 ----------------------------------------
-Dataset annotation: Rancho Palos Verdes , Rolling Hills Estates and Rolling Hills are three cities on the Palos Verdes Peninsula .
+Reference: Rancho Palos Verdes , Rolling Hills Estates and Rolling Hills are three cities on the Palos Verdes Peninsula .
 
 ================================================================================
 id: 60
@@ -770,7 +770,7 @@ id: 60
 
 ### Simplified: Men and women must observe these guidelines .
 ----------------------------------------
-Dataset annotation: Although many mosques will not enforce rules , both men and women when there must follow these rules
+Reference: Although many mosques will not enforce rules , both men and women when there must follow these rules
 
 ================================================================================
 id: 61
@@ -781,7 +781,7 @@ id: 61
 
 ### Simplified: Giardia lamblia is a parasite that lives in the small intestine , causing giardiasis in small children .
 ----------------------------------------
-Dataset annotation: Giardia lamblia is a flagellated protozoan parasite that colonises and reproduces in the small intestine , causing giardiasis .
+Reference: Giardia lamblia is a flagellated protozoan parasite that colonises and reproduces in the small intestine , causing giardiasis .
 
 ================================================================================
 id: 62
@@ -792,7 +792,7 @@ id: 62
 
 ### Simplified: Rollo swore fealty to Charles , converted to Christianity , and undertook to defend the northern region of France against the incursions of other Viking groups .
 ----------------------------------------
-Dataset annotation: Rollo swore fealty to Charles , changed to Christianity , and undertook to standby the northern region of France against the incursions of other Viking groups .
+Reference: Rollo swore fealty to Charles , changed to Christianity , and undertook to standby the northern region of France against the incursions of other Viking groups .
 
 ================================================================================
 id: 63
@@ -803,7 +803,7 @@ id: 63
 
 ### Simplified: The event was called ethics in scholarship .
 ----------------------------------------
-Dataset annotation: The incident has been the subject of numerous reports regarding scholarship ethics .
+Reference: The incident has been the subject of numerous reports regarding scholarship ethics .
 
 ================================================================================
 id: 64
@@ -814,7 +814,7 @@ id: 64
 
 ### Simplified: They are castrated so that the animal may be more docile or may put on weight more quickly .
 ----------------------------------------
-Dataset annotation: They are castrated so that the animal is docile or may put on weight quickly .
+Reference: They are castrated so that the animal is docile or may put on weight quickly .
 
 ================================================================================
 id: 65
@@ -825,7 +825,7 @@ id: 65
 
 ### Simplified: It is also a starting point for people wanting to explore Cooktown , Cape York Peninsula , and the Atherton Tableland .
 ----------------------------------------
-Dataset annotation: It is a starting point for people wanting to explore Cooktown , Cape York Peninsula and Atherton Tableland .
+Reference: It is a starting point for people wanting to explore Cooktown , Cape York Peninsula and Atherton Tableland .
 
 ================================================================================
 id: 66
@@ -836,7 +836,7 @@ id: 66
 
 ### Simplified: Sometimes the pain is very serious .
 ----------------------------------------
-Dataset annotation: Bruises often hurt but are not normally dangerous .
+Reference: Bruises often hurt but are not normally dangerous .
 
 ================================================================================
 id: 67
@@ -847,7 +847,7 @@ id: 67
 
 ### Simplified: Now , Landis is a huge supporter of his son and regards himself as one of Floyd 's biggest fans .
 ----------------------------------------
-Dataset annotation: Landis ' father has become a supporter of his son and regards himself as one of Floyd 's biggest fans .
+Reference: Landis ' father has become a supporter of his son and regards himself as one of Floyd 's biggest fans .
 
 ================================================================================
 id: 68
@@ -858,7 +858,7 @@ id: 68
 
 ### Simplified: He settled in London , devoting himself chiefly to practical teaching .
 ----------------------------------------
-Dataset annotation: He teaches in London .
+Reference: He teaches in London .
 
 ================================================================================
 id: 69
@@ -869,7 +869,7 @@ id: 69
 
 ### Simplified: The depression moved inland on the 20th as a circulation devoid of convection , and dissipated the next day over Brazil .
 ----------------------------------------
-Dataset annotation: On 20th depression moved inland as convection less circulation and after weakening over Brazil it caused heavy rains and flooding .
+Reference: On 20th depression moved inland as convection less circulation and after weakening over Brazil it caused heavy rains and flooding .
 
 ================================================================================
 id: 70
@@ -880,7 +880,7 @@ id: 70
 
 ### Simplified: Because the owner tends to be too ignorant , these machines are metaphorically compared to zombies .
 ----------------------------------------
-Dataset annotation: these computers are metaphorically compared to zombies as the owner was not concious about it
+Reference: these computers are metaphorically compared to zombies as the owner was not concious about it
 
 ================================================================================
 id: 71
@@ -891,7 +891,7 @@ id: 71
 
 ### Simplified: It traveled across the Atlantic , and organized into a tropical depression on September 13 .
 ----------------------------------------
-Dataset annotation: The wave traveled across the Atlantic and organized into a tropical depression off the coast of Haiti on September 13 .
+Reference: The wave traveled across the Atlantic and organized into a tropical depression off the coast of Haiti on September 13 .
 
 ================================================================================
 id: 72
@@ -902,7 +902,7 @@ id: 72
 
 ### Simplified: For example , the stylebook of the Associated Press is updated annually .
 ----------------------------------------
-Dataset annotation: The stylebook of the Associated Press is updated yearly .
+Reference: The stylebook of the Associated Press is updated yearly .
 
 ================================================================================
 id: 73
@@ -913,7 +913,7 @@ id: 73
 
 ### Simplified: Finally in 1482 the Order sent him to Florence .
 ----------------------------------------
-Dataset annotation: In 1482 the Order dispatched him to Florence .
+Reference: In 1482 the Order dispatched him to Florence .
 
 ================================================================================
 id: 74
@@ -924,7 +924,7 @@ id: 74
 
 ### Simplified: Cogeneration is the use of a heat engine or a power station to combine both electricity and useful heat .
 ----------------------------------------
-Dataset annotation: Cogeneration is a combination of heart and power to simultaneously generate both electricity and useful heat .
+Reference: Cogeneration is a combination of heart and power to simultaneously generate both electricity and useful heat .
 
 ================================================================================
 id: 75
@@ -935,7 +935,7 @@ id: 75
 
 ### Simplified: Each version of the License is given a distinguishing version number .
 ----------------------------------------
-Dataset annotation: Each license is given a number .
+Reference: Each license is given a number .
 
 ================================================================================
 id: 76
@@ -946,7 +946,7 @@ id: 76
 
 ### Simplified: Most IRC servers do not require users to register an account .
 ----------------------------------------
-Dataset annotation: Most IRC servers only require a user to set a nickname .
+Reference: Most IRC servers only require a user to set a nickname .
 
 ================================================================================
 id: 77
@@ -957,7 +957,7 @@ id: 77
 
 ### Simplified: Venis pinned Rikishi after Tazz hit Rikishi with a TV camera .
 ----------------------------------------
-Dataset annotation: Val Venis defeated Rikishi in a steel cage match to keep is WWF Intercontinental Championship , Venis pinned Rikishi after Tazz hit Rikishi with a t.v camera .
+Reference: Val Venis defeated Rikishi in a steel cage match to keep is WWF Intercontinental Championship , Venis pinned Rikishi after Tazz hit Rikishi with a t.v camera .
 
 ================================================================================
 id: 78
@@ -968,7 +968,7 @@ id: 78
 
 ### Simplified: This closely resembles the Unix philosophy of having multiple programs each doing one thing well and working together over interfaces .
 ----------------------------------------
-Dataset annotation: This looks like the Unix idea of having several programs with each doing one thing and working together .
+Reference: This looks like the Unix idea of having several programs with each doing one thing and working together .
 
 ================================================================================
 id: 79
@@ -979,7 +979,7 @@ id: 79
 
 ### Simplified: He is buried at Restvale Cemetery in Alsip , Illinois .
 ----------------------------------------
-Dataset annotation: He is interred in Restvale Cemetery in Alsip Illinois .
+Reference: He is interred in Restvale Cemetery in Alsip Illinois .
 
 ================================================================================
 id: 80
@@ -990,7 +990,7 @@ id: 80
 
 ### Simplified: Karbala is one of the most holy places in Islam .
 ----------------------------------------
-Dataset annotation: Shi'a Muslims consider Karbala to be one of their holiest cities after Mecca , Medina , Jerusalem and Najaf .
+Reference: Shi'a Muslims consider Karbala to be one of their holiest cities after Mecca , Medina , Jerusalem and Najaf .
 
 ================================================================================
 id: 81
@@ -1001,7 +1001,7 @@ id: 81
 
 ### Simplified: When he is going to rehearsal , he and Dr. Schön leave .
 ----------------------------------------
-Dataset annotation: He excuses himself because he has to leave for rehearsal , Dr.Dr . Schön leave
+Reference: He excuses himself because he has to leave for rehearsal , Dr.Dr . Schön leave
 
 ================================================================================
 id: 82
@@ -1012,7 +1012,7 @@ id: 82
 
 ### Simplified: Thirty-four defencemen are in the Hall of Fame , more than any other current position , while 35 goaltenders have been inducted .
 ----------------------------------------
-Dataset annotation: Out of seventy-five defencemen in the hall of fame , only 35 goaltenders have been inducted .
+Reference: Out of seventy-five defencemen in the hall of fame , only 35 goaltenders have been inducted .
 
 ================================================================================
 id: 83
@@ -1023,7 +1023,7 @@ id: 83
 
 ### Simplified: He won the presidential election held on 2 March 2008 with 71.25 percent of the popular vote .
 ----------------------------------------
-Dataset annotation: He conquered the presidential poll on 2 March 2008 with 71.25 % of the popular vote .
+Reference: He conquered the presidential poll on 2 March 2008 with 71.25 % of the popular vote .
 
 ================================================================================
 id: 84
@@ -1034,7 +1034,7 @@ id: 84
 
 ### Simplified: He was appointed Companion of Honour in 1988 .
 ----------------------------------------
-Dataset annotation: He was appointed Companion of Honour in 1988 .
+Reference: He was appointed Companion of Honour in 1988 .
 
 ================================================================================
 id: 85
@@ -1045,7 +1045,7 @@ id: 85
 
 ### Simplified: Onyx is a Swiss program for electronic intelligence gathering .
 ----------------------------------------
-Dataset annotation: Loèche harbours of Onyx is the Swiss interception system for electronic intelligence gathering .
+Reference: Loèche harbours of Onyx is the Swiss interception system for electronic intelligence gathering .
 
 ================================================================================
 id: 86
@@ -1056,7 +1056,7 @@ id: 86
 
 ### Simplified: The Montreal Canadiens are a professional ice hockey team in Montreal , Quebec .
 ----------------------------------------
-Dataset annotation: The Montreal Canadiens are a skilled ice hockey team from Montreal , Quebec , Canada .
+Reference: The Montreal Canadiens are a skilled ice hockey team from Montreal , Quebec , Canada .
 
 ================================================================================
 id: 87
@@ -1067,7 +1067,7 @@ id: 87
 
 ### Simplified: Small value inductors can also be built on integrated circuits using the same processes that are used to make transistors .
 ----------------------------------------
-Dataset annotation: Both small value inductors and transistors can be built on integrated circuits .
+Reference: Both small value inductors and transistors can be built on integrated circuits .
 
 ================================================================================
 id: 88
@@ -1078,7 +1078,7 @@ id: 88
 
 ### Simplified: It is about the size of a rabbit .
 ----------------------------------------
-Dataset annotation: It is about the size of a rabbit and has a pointed face .
+Reference: It is about the size of a rabbit and has a pointed face .
 
 ================================================================================
 id: 89
@@ -1089,7 +1089,7 @@ id: 89
 
 ### Simplified: It was named after the digital magazine and the name of the television station .
 ----------------------------------------
-Dataset annotation: The name survives as a brand for related spin-off digital television channel , digital radio station and website which has survived the demise of the printed magazine .
+Reference: The name survives as a brand for related spin-off digital television channel , digital radio station and website which has survived the demise of the printed magazine .
 
 ================================================================================
 id: 90
@@ -1100,7 +1100,7 @@ id: 90
 
 ### Simplified: This led to reports of riots being false .
 ----------------------------------------
-Dataset annotation: Schuschnigg responded publicly that reports of riots were false .
+Reference: Schuschnigg responded publicly that reports of riots were false .
 
 ================================================================================
 id: 91
@@ -1111,7 +1111,7 @@ id: 91
 
 ### Simplified: Mercury is similar in appearance to the Moon : it is heavily cratered with regions of smooth plains , has no natural satellites and no large atmosphere .
 ----------------------------------------
-Dataset annotation: Mercury is similar in appearance to the moon with heavily cratered regions of smooth plains and no natural satellites or substantial atmosphere .
+Reference: Mercury is similar in appearance to the moon with heavily cratered regions of smooth plains and no natural satellites or substantial atmosphere .
 
 ================================================================================
 id: 92
@@ -1122,7 +1122,7 @@ id: 92
 
 ### Simplified: It is now the site of Meher Baba 's samadhi .
 ----------------------------------------
-Dataset annotation: It is now the Meher Baba 's tomb-shrine and a place for pilgrims .
+Reference: It is now the Meher Baba 's tomb-shrine and a place for pilgrims .
 
 ================================================================================
 id: 93
@@ -1133,7 +1133,7 @@ id: 93
 
 ### Simplified: The number of birds in the population has doubled since 2000 .
 ----------------------------------------
-Dataset annotation: Forty-nine species of pipefish and nine species of seahorse are recorded .
+Reference: Forty-nine species of pipefish and nine species of seahorse are recorded .
 
 ================================================================================
 id: 94
@@ -1144,7 +1144,7 @@ id: 94
 
 ### Simplified: The Ohio State 's library system is twenty-one libraries .
 ----------------------------------------
-Dataset annotation: Ohio State 's library system has twenty-one libraries located on its campus .
+Reference: Ohio State 's library system has twenty-one libraries located on its campus .
 
 ================================================================================
 id: 95
@@ -1155,7 +1155,7 @@ id: 95
 
 ### Simplified: They can not be used as collateral to raise capital to finance industrial and commercial expansion .
 ----------------------------------------
-Dataset annotation: That is beacuase real estate , businesses , and other assets in the underground economies of the Third World can not be used as collateral to raise capital .
+Reference: That is beacuase real estate , businesses , and other assets in the underground economies of the Third World can not be used as collateral to raise capital .
 
 ================================================================================
 id: 96
@@ -1166,7 +1166,7 @@ id: 96
 
 ### Simplified: He toured with the IPO in the spring of 1990 for their first performance in the Soviet Union , and concerts in Moscow and Leningrad , and toured with the IPO again in 1994 .
 ----------------------------------------
-Dataset annotation: for their first-ever performance in the Soviet Union he toured with the IPO spring from 1990 to 1994 with china and india
+Reference: for their first-ever performance in the Soviet Union he toured with the IPO spring from 1990 to 1994 with china and india
 
 ================================================================================
 id: 97
@@ -1177,7 +1177,7 @@ id: 97
 
 ### Simplified: The Tamil language is also spoken in many parts of South India .
 ----------------------------------------
-Dataset annotation: Most South Indians speak one of the five Dravidian languages -- Kannada , Malayalam , Tamil , Telugu and Tulu .
+Reference: Most South Indians speak one of the five Dravidian languages -- Kannada , Malayalam , Tamil , Telugu and Tulu .
 
 ================================================================================
 id: 98
@@ -1188,7 +1188,7 @@ id: 98
 
 ### Simplified: Brighton is a city of Iowa in the United States .
 ----------------------------------------
-Dataset annotation: Brighton is a city in Washington County Iowa .
+Reference: Brighton is a city in Washington County Iowa .
 
 ================================================================================
 id: 99
@@ -1199,7 +1199,7 @@ id: 99
 
 ### Simplified: In 1979 , Glinde received its town charter .
 ----------------------------------------
-Dataset annotation: Glinde received her town charter on june 24 1979
+Reference: Glinde received her town charter on june 24 1979
 
 ================================================================================
 id: 100
@@ -1210,7 +1210,7 @@ id: 100
 
 ### Label: World
 ----------------------------------------
-Dataset annotation: World<|endoftext|>
+Reference: World<|endoftext|>
 
 ================================================================================
 id: 101
@@ -1221,7 +1221,7 @@ id: 101
 
 ### Label: World
 ----------------------------------------
-Dataset annotation: World<|endoftext|>
+Reference: World<|endoftext|>
 
 ================================================================================
 id: 102
@@ -1232,7 +1232,7 @@ id: 102
 
 ### Label: Business
 ----------------------------------------
-Dataset annotation: Sci/Tech<|endoftext|>
+Reference: Sci/Tech<|endoftext|>
 
 ================================================================================
 id: 103
@@ -1243,7 +1243,7 @@ id: 103
 
 ### Label: Sports
 ----------------------------------------
-Dataset annotation: Sports<|endoftext|>
+Reference: Sports<|endoftext|>
 
 ================================================================================
 id: 104
@@ -1254,7 +1254,7 @@ id: 104
 
 ### Label: Business
 ----------------------------------------
-Dataset annotation: Business<|endoftext|>
+Reference: Business<|endoftext|>
 
 ================================================================================
 id: 105
@@ -1265,7 +1265,7 @@ id: 105
 
 ### Label: Sci/Tech
 ----------------------------------------
-Dataset annotation: Business<|endoftext|>
+Reference: Business<|endoftext|>
 
 ================================================================================
 id: 106
@@ -1276,7 +1276,7 @@ id: 106
 
 ### Label: Sports
 ----------------------------------------
-Dataset annotation: Sports<|endoftext|>
+Reference: Sports<|endoftext|>
 
 ================================================================================
 id: 107
@@ -1287,7 +1287,7 @@ id: 107
 
 ### Label: Sports
 ----------------------------------------
-Dataset annotation: Sports<|endoftext|>
+Reference: Sports<|endoftext|>
 
 ================================================================================
 id: 108
@@ -1298,7 +1298,7 @@ id: 108
 
 ### Label: World
 ----------------------------------------
-Dataset annotation: World<|endoftext|>
+Reference: World<|endoftext|>
 
 ================================================================================
 id: 109
@@ -1309,7 +1309,7 @@ id: 109
 
 ### Label: Business
 ----------------------------------------
-Dataset annotation: Business<|endoftext|>
+Reference: Business<|endoftext|>
 
 ================================================================================
 id: 110
@@ -1320,7 +1320,7 @@ id: 110
 
 ### Label: World
 ----------------------------------------
-Dataset annotation: World<|endoftext|>
+Reference: World<|endoftext|>
 
 ================================================================================
 id: 111
@@ -1331,7 +1331,7 @@ id: 111
 
 ### Label: Business
 ----------------------------------------
-Dataset annotation: Business<|endoftext|>
+Reference: Business<|endoftext|>
 
 ================================================================================
 id: 112
@@ -1342,7 +1342,7 @@ id: 112
 
 ### Label: Sci/Tech
 ----------------------------------------
-Dataset annotation: Business<|endoftext|>
+Reference: Business<|endoftext|>
 
 ================================================================================
 id: 113
@@ -1353,7 +1353,7 @@ id: 113
 
 ### Label: Business
 ----------------------------------------
-Dataset annotation: Business<|endoftext|>
+Reference: Business<|endoftext|>
 
 ================================================================================
 id: 114
@@ -1364,7 +1364,7 @@ id: 114
 
 ### Label: Sports
 ----------------------------------------
-Dataset annotation: Sports<|endoftext|>
+Reference: Sports<|endoftext|>
 
 ================================================================================
 id: 115
@@ -1375,7 +1375,7 @@ id: 115
 
 ### Label: Sci/Tech
 ----------------------------------------
-Dataset annotation: World<|endoftext|>
+Reference: World<|endoftext|>
 
 ================================================================================
 id: 116
@@ -1386,7 +1386,7 @@ id: 116
 
 ### Label: Sports
 ----------------------------------------
-Dataset annotation: Sports<|endoftext|>
+Reference: Sports<|endoftext|>
 
 ================================================================================
 id: 117
@@ -1397,7 +1397,7 @@ id: 117
 
 ### Label: Sci/Tech
 ----------------------------------------
-Dataset annotation: Sci/Tech<|endoftext|>
+Reference: Sci/Tech<|endoftext|>
 
 ================================================================================
 id: 118
@@ -1408,7 +1408,7 @@ id: 118
 
 ### Label: World
 ----------------------------------------
-Dataset annotation: World<|endoftext|>
+Reference: World<|endoftext|>
 
 ================================================================================
 id: 119
@@ -1419,7 +1419,7 @@ id: 119
 
 ### Label: Sci/Tech
 ----------------------------------------
-Dataset annotation: Sci/Tech<|endoftext|>
+Reference: Sci/Tech<|endoftext|>
 
 ================================================================================
 id: 120
@@ -1430,7 +1430,7 @@ id: 120
 
 ### Label: Sports
 ----------------------------------------
-Dataset annotation: Sports<|endoftext|>
+Reference: Sports<|endoftext|>
 
 ================================================================================
 id: 121
@@ -1441,7 +1441,7 @@ id: 121
 
 ### Label: Business
 ----------------------------------------
-Dataset annotation: Business<|endoftext|>
+Reference: Business<|endoftext|>
 
 ================================================================================
 id: 122
@@ -1452,7 +1452,7 @@ id: 122
 
 ### Label: Sci/Tech
 ----------------------------------------
-Dataset annotation: Sci/Tech<|endoftext|>
+Reference: Sci/Tech<|endoftext|>
 
 ================================================================================
 id: 123
@@ -1463,7 +1463,7 @@ id: 123
 
 ### Label: Business
 ----------------------------------------
-Dataset annotation: Business<|endoftext|>
+Reference: Business<|endoftext|>
 
 ================================================================================
 id: 124
@@ -1474,7 +1474,7 @@ id: 124
 
 ### Label: Sci/Tech
 ----------------------------------------
-Dataset annotation: Sci/Tech<|endoftext|>
+Reference: Sci/Tech<|endoftext|>
 
 ================================================================================
 id: 125
@@ -1485,7 +1485,7 @@ id: 125
 
 ### Label: Sports
 ----------------------------------------
-Dataset annotation: Sports<|endoftext|>
+Reference: Sports<|endoftext|>
 
 ================================================================================
 id: 126
@@ -1496,7 +1496,7 @@ id: 126
 
 ### Label: World
 ----------------------------------------
-Dataset annotation: World<|endoftext|>
+Reference: World<|endoftext|>
 
 ================================================================================
 id: 127
@@ -1507,7 +1507,7 @@ id: 127
 
 ### Label: Sci/Tech
 ----------------------------------------
-Dataset annotation: Sci/Tech<|endoftext|>
+Reference: Sci/Tech<|endoftext|>
 
 ================================================================================
 id: 128
@@ -1518,7 +1518,7 @@ id: 128
 
 ### Label: Sports
 ----------------------------------------
-Dataset annotation: Sports<|endoftext|>
+Reference: Sports<|endoftext|>
 
 ================================================================================
 id: 129
@@ -1529,7 +1529,7 @@ id: 129
 
 ### Label: World
 ----------------------------------------
-Dataset annotation: World<|endoftext|>
+Reference: World<|endoftext|>
 
 ================================================================================
 id: 130
@@ -1540,7 +1540,7 @@ id: 130
 
 ### Label: Business
 ----------------------------------------
-Dataset annotation: Business<|endoftext|>
+Reference: Business<|endoftext|>
 
 ================================================================================
 id: 131
@@ -1551,7 +1551,7 @@ id: 131
 
 ### Label: World
 ----------------------------------------
-Dataset annotation: World<|endoftext|>
+Reference: World<|endoftext|>
 
 ================================================================================
 id: 132
@@ -1562,7 +1562,7 @@ id: 132
 
 ### Label: Sci/Tech
 ----------------------------------------
-Dataset annotation: Sci/Tech<|endoftext|>
+Reference: Sci/Tech<|endoftext|>
 
 ================================================================================
 id: 133
@@ -1573,7 +1573,7 @@ id: 133
 
 ### Label: Sci/Tech
 ----------------------------------------
-Dataset annotation: Sci/Tech<|endoftext|>
+Reference: Sci/Tech<|endoftext|>
 
 ================================================================================
 id: 134
@@ -1584,7 +1584,7 @@ id: 134
 
 ### Label: Sports
 ----------------------------------------
-Dataset annotation: Sports<|endoftext|>
+Reference: Sports<|endoftext|>
 
 ================================================================================
 id: 135
@@ -1595,7 +1595,7 @@ id: 135
 
 ### Label: Business
 ----------------------------------------
-Dataset annotation: Business<|endoftext|>
+Reference: Business<|endoftext|>
 
 ================================================================================
 id: 136
@@ -1606,7 +1606,7 @@ id: 136
 
 ### Label: Sports
 ----------------------------------------
-Dataset annotation: Sports<|endoftext|>
+Reference: Sports<|endoftext|>
 
 ================================================================================
 id: 137
@@ -1617,7 +1617,7 @@ id: 137
 
 ### Label: Business
 ----------------------------------------
-Dataset annotation: Business<|endoftext|>
+Reference: Business<|endoftext|>
 
 ================================================================================
 id: 138
@@ -1628,7 +1628,7 @@ id: 138
 
 ### Label: World
 ----------------------------------------
-Dataset annotation: World<|endoftext|>
+Reference: World<|endoftext|>
 
 ================================================================================
 id: 139
@@ -1639,7 +1639,7 @@ id: 139
 
 ### Label: Business
 ----------------------------------------
-Dataset annotation: Business<|endoftext|>
+Reference: Business<|endoftext|>
 
 ================================================================================
 id: 140
@@ -1650,7 +1650,7 @@ id: 140
 
 ### Label: Sports
 ----------------------------------------
-Dataset annotation: Sports<|endoftext|>
+Reference: Sports<|endoftext|>
 
 ================================================================================
 id: 141
@@ -1661,7 +1661,7 @@ id: 141
 
 ### Label: World
 ----------------------------------------
-Dataset annotation: World<|endoftext|>
+Reference: World<|endoftext|>
 
 ================================================================================
 id: 142
@@ -1672,7 +1672,7 @@ id: 142
 
 ### Label: Business
 ----------------------------------------
-Dataset annotation: Business<|endoftext|>
+Reference: Business<|endoftext|>
 
 ================================================================================
 id: 143
@@ -1683,7 +1683,7 @@ id: 143
 
 ### Label: World
 ----------------------------------------
-Dataset annotation: World<|endoftext|>
+Reference: World<|endoftext|>
 
 ================================================================================
 id: 144
@@ -1694,7 +1694,7 @@ id: 144
 
 ### Label: Sports
 ----------------------------------------
-Dataset annotation: Sports<|endoftext|>
+Reference: Sports<|endoftext|>
 
 ================================================================================
 id: 145
@@ -1705,7 +1705,7 @@ id: 145
 
 ### Label: Sci/Tech
 ----------------------------------------
-Dataset annotation: Sci/Tech<|endoftext|>
+Reference: Sci/Tech<|endoftext|>
 
 ================================================================================
 id: 146
@@ -1716,7 +1716,7 @@ id: 146
 
 ### Label: Sports
 ----------------------------------------
-Dataset annotation: Sports<|endoftext|>
+Reference: Sports<|endoftext|>
 
 ================================================================================
 id: 147
@@ -1727,7 +1727,7 @@ id: 147
 
 ### Label: Sports
 ----------------------------------------
-Dataset annotation: Sports<|endoftext|>
+Reference: Sports<|endoftext|>
 
 ================================================================================
 id: 148
@@ -1738,7 +1738,7 @@ id: 148
 
 ### Label: World
 ----------------------------------------
-Dataset annotation: World<|endoftext|>
+Reference: World<|endoftext|>
 
 ================================================================================
 id: 149
@@ -1749,4 +1749,4 @@ id: 149
 
 ### Label: Business
 ----------------------------------------
-Dataset annotation: Business<|endoftext|>
+Reference: Business<|endoftext|>

@@ -12,6 +12,48 @@ from utils.gen_text import generate_text
 
 
 def get_prompt_data(filepath, tokenizer, seq_len=1024, pad_token=50256):
+    """
+    Loads a JSON file containing example prompts, truncates/pads them to `seq_len`,
+    and generates the attention masks.
+
+    JSON file syntax:
+    {
+       "0": {
+           "prompt": "### Task: answer question\n\n### Context: The investors eventually left Tesla penniless. 
+               He had to work at various electrical repair jobs and even as a ditch digger for $2 per day.\n\n
+               ### Question: What else did Tesla do for work at this time?\n\n### Answer: ",
+           "reference": "various electrical repair jobs"
+        },
+        "1": {
+           "prompt": "### Task: simplify text\n\n### Text: He settled in London, devoting himself chiefly 
+               to practical teaching .\n\n### Simplified: ",
+           "reference": "He teaches in London."
+        },
+        "2": {
+           "prompt": "### Task: classify news\n\n### News: Serena takes China title Serena Williams got back
+               to winning ways with victory over US Open champion Svetlana Kuznetsova in the final of 
+               the China Open on Sunday.\n\n### Label: ",
+           "reference": "Sports"
+        }
+    }
+
+    The function outputs a list of dictionaries, one per example with the following items:
+        "id":
+            Unique ID of the example
+        "prompt": 
+            Prompt text
+        "prompt_ids":
+            Prompt token IDs
+            List of length `seq_len`
+        "task":
+            Task to perform (answer question, simplify text, or classify news)
+        "attention_mask":
+            Specifies which token positions to attend to (hides padding)
+            List of length `seq_len`
+        "reference":
+            Reference text from the dataset
+
+    """
 
     with open(filepath, "r", encoding="utf-8") as f:
         json_prompts = json.load(f)
@@ -21,15 +63,14 @@ def get_prompt_data(filepath, tokenizer, seq_len=1024, pad_token=50256):
 
     for id, json_example in json_data.items():
 
+        prompt = json_example["prompt"]
         example = {
             "id": id,
-            "annotation": json_example["annotation"]
+            "prompt": json_example["prompt"],
+            "reference": json_example["reference"]
         }
 
         # Get the task to perform
-        prompt = json_example["prompt"]
-        example["prompt"] = prompt
-
         if prompt.startswith("### Task: answer question\n\n"):
             task = "answer question"
         elif prompt.startswith("### Task: simplify text\n\n"):
@@ -41,15 +82,16 @@ def get_prompt_data(filepath, tokenizer, seq_len=1024, pad_token=50256):
                 f"Unable to identify the task to perform from input prompt:\n{prompt}\n"
                 "\nValid tasks are: 'follow instructions', 'simplify text', 'classify news'"
             )
-        
         example["task"] = task
 
-        # Tokenize the prompt and truncate
+        # Tokenize the prompt and truncate it if needed
         prompt_ids = tokenizer.encode(prompt)
         prompt_ids = prompt_ids[:seq_len]
 
+        # Create the attention mask
         attention_mask = [1] * len(prompt_ids)
 
+        # Pad prompt sequence and attention mask to `seq_len`
         if len(prompt_ids) < seq_len:
             pad_len = seq_len - len(prompt_ids)
             prompt_ids += [pad_token] * pad_len
@@ -63,28 +105,17 @@ def get_prompt_data(filepath, tokenizer, seq_len=1024, pad_token=50256):
     return prompt_data
 
 
-def postprocess_model_output(tokens_out):
-
-    tokenizer = tiktoken.get_encoding("gpt2")
-    eos_token = 50256
-
-    out = []
-    for t in tokens_out:
-        if t == eos_token:
-            break
-        out.append(t)
-
-    return tokenizer.decode(out)
-
-
-def dump_responses(model_responses, annotations, filepath):
+def dump_responses(model_responses, references, filepath):
+    """
+    Write prompts, model responses and reference answers to a text file.
+    """
 
     formatted = []
     for id in model_responses.keys():
         lines = f"\n{80 * '='}\n"
         lines += f"id: {id}\n{40 * '-'}\n"
         lines += f"{model_responses[id]}\n{40 * '-'}\n"
-        lines += f"Dataset annotation: {annotations[id]}"
+        lines += f"Reference: {references[id]}"
         formatted.append(lines)
 
     with open(filepath, 'w', encoding='utf-8') as f:
@@ -92,7 +123,11 @@ def dump_responses(model_responses, annotations, filepath):
 
 
 def test_prompts(project_root, model_size):
+    """
+    Test example prompts provided in a JSON file.
     
+    """
+
     if not os.path.isdir(project_root):
         raise FileNotFoundError(f"Unable to find project root directory {project_root}")
     
@@ -101,8 +136,10 @@ def test_prompts(project_root, model_size):
     if not os.path.isfile(prompts_fn):
         raise FileNotFoundError(f'Unable to find JSON prompts file {prompts_fn}')
     
-    print(f">> Loading prompts file {prompts_fn}")
     tokenizer = tiktoken.get_encoding("gpt2")
+    eos_token = 50256
+
+    print(f">> Loading prompts file {prompts_fn}")
     prompt_data = get_prompt_data(prompts_fn, tokenizer)
 
     # Load the model with LoRA adapters
@@ -137,17 +174,26 @@ def test_prompts(project_root, model_size):
         }
         sampling_params = [sampling_params]
 
-        tokens_out = generate_text(
+        model_outputs = generate_text(
             model,
             model_inputs=model_inputs,
             output_len=100,
             sampling_params=sampling_params
         )
     
-        model_responses[id] = postprocess_model_output(tokens_out[0])
-        annotations[id] = example["annotation"]
+        # We work with batches of one element.
+        tokens_out = model_outputs[0]
 
-    responses_fn = os.path.join(project_root, f"gpt2_{model_size}", "tests", "lora_responses.txt")
+        # Truncate the list of tokens before the first pad token,
+        # which marks the end of the model response
+        tokens_out = tokens_out[:tokens_out.index(eos_token)]
+        model_responses[id] = tokenizer.decode(tokens_out)
+
+        annotations[id] = example["reference"]
+
+    responses_fn = os.path.join(
+        project_root, f"gpt2_{model_size}", "tests", "lora_responses.txt"
+    )
     print(f"Writing model responses to file {responses_fn}")
     dump_responses(model_responses, annotations, responses_fn)
 

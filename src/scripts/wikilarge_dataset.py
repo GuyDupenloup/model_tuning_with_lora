@@ -10,6 +10,36 @@ from utils.dataset_utils import write_dataset_tfrecords
 
 
 def tokenize_example(tokenizer, input_text, output_text, seq_len, pad_token=50256):
+    """
+    Assembles the full text of the example, tokenizes it, and generates 
+    the attention mask and loss mask.
+
+    Returns the example token sequence, attention mask, and loss mask.
+    All of them are lists of length seq_len.
+    Additionally, the function returns a flag indicating if the sequence
+    was truncated.
+
+    All of them are lists of length seq_len.
+
+    The example text is formatted as follows:
+
+        ### Task: simplify text
+
+        ### Text: `text to simplify`
+
+        ### Simplified: `simplified text`
+        
+    If needed:
+    - The text to simplify is truncated so that the full sequence length
+      does not exceed `seq_len`.
+    - The full sequence is padded to `seq_len` using the pad token.
+
+    As tiktoken does not have a dedicated <EOS> token, a pad token is added 
+    at the end of the sequence to mark the end of the model response.
+    Unlike the other pad tokens, the model must attend to it and it must
+    be included in the loss calculation. The attention mask and loss
+    mask are set accordingly.
+    """
 
     header_1 = tokenizer.encode("### Task: simplify text\n\n### Text: ")
     input_ids = tokenizer.encode(input_text)
@@ -22,54 +52,75 @@ def tokenize_example(tokenizer, input_text, output_text, seq_len, pad_token=5025
     truncated = len(input_ids) > max_input_len
     input_ids = input_ids[:max_input_len]
 
-    # Create prompt, attention mask, and loss mask
-    prompt = header_1 + input_ids + header_2 + output_ids
-    attention_mask = [1] * len(prompt)
-    loss_mask = [0] * (len(prompt) - len(output_ids)) + [1] * len(output_ids)
+    # Create full token sequence, attention mask, and loss mask
+    example_ids = header_1 + input_ids + header_2 + output_ids
+    attention_mask = [1] * len(example_ids)
+    loss_mask = [0] * (len(example_ids) - len(output_ids)) + [1] * len(output_ids)
 
     # Pad to seq_len
-    if len(prompt) < seq_len:
-        pad_len = seq_len - len(prompt)
-        prompt += [pad_token] * pad_len
+    if len(example_ids) < seq_len:
+        pad_len = seq_len - len(example_ids)
+        example_ids += [pad_token] * pad_len
         attention_mask += [0] * pad_len
         loss_mask += [0] * pad_len
 
-    return prompt, attention_mask, loss_mask, truncated
+    return example_ids, attention_mask, loss_mask, truncated
 
 
 def tokenize_dataset(dataset, tokenizer, seq_len):
+    """
+    Preprocesses a set of examples from the wikilarge dataset.
 
-    prompts = []
+    Returns a dictionary that has the following items:
+        "input_ids":
+            Token ID sequences of the examples (the model inputs)
+        "attention_mask":
+            Masks specifying which token positions to attend to
+        "loss_mask":
+            Masks specifying which token positions contribute to the training loss
+    
+    All items are numpy arrays with shape (num_examples, seq_len).
+    """
+
+    example_ids = []
     loss_masks = []
     attention_masks = []
-    truncated_prompts = 0
+    truncated_examples = 0
 
     for example in dataset:
 
-        prompt_x, attention_mask_x, loss_mask_x, truncated_x = tokenize_example(
+        example_ids_x, attention_mask_x, loss_mask_x, truncated_x = tokenize_example(
             tokenizer,
             example["source"],
             example["target"],
             seq_len
         )
 
-        prompts.append(prompt_x)
+        example_ids.append(example_ids_x)
         attention_masks.append(attention_mask_x)
         loss_masks.append(loss_mask_x)
-        truncated_prompts += int(truncated_x)
+        truncated_examples += int(truncated_x)
 
-    print(f"Truncated prompts: {truncated_prompts}")
+    print(f"Truncated examples: {truncated_examples}")
     
     # Wrap outputs in dictionary
     return {
-        "input_ids": np.array(prompts, dtype=np.int32),
+        "input_ids": np.array(example_ids, dtype=np.int32),
         "attention_mask": np.array(attention_masks, dtype=np.int32),
         "loss_mask": np.array(loss_masks, dtype=np.int32)
     }
 
 
 def parse_and_write_dataset(project_root):
+    """
+    Preprocesses the training, validation, and test sets of a dataset.
+    Then, writes them to TFRecords.
 
+    The directory where the TFRecords are saved is:
+        `project_root`/datasets/wikilarge
+    and the files are named:
+        train.tfrecord, val.tfrecords, and test.tfrecords
+    """
     if not os.path.isdir(project_root):
         raise FileNotFoundError(f"Unable to find project root directory {project_root}")
     
@@ -106,7 +157,7 @@ def parse_and_write_dataset(project_root):
     print(f"Examples: {test_size}")
     test_data = tokenize_dataset(test_set, tokenizer, seq_len)
 
-    print("\nSaving dataset files")
+    print("\nSaving dataset files (TFRecords and metadata)")
     metadata = {
         "dataset_name": dataset_name,
         "train_size": train_size,

@@ -11,7 +11,7 @@ from models.gpt2_language_model import GPT2LanguageModel
 
 def get_gpt2_model_config(model_size):
     """
-    Returns model configuration parameters for each of OpenAI's model sizes.
+    Returns model configuration parameters for each of OpenAI's GPT-2 model sizes.
     """
     model_configs = {
          "124M": {"vocab_size": 50257,  "max_seq_len": 1024, "d_model": 768,  "n_layers": 12, "n_heads": 12},
@@ -38,7 +38,7 @@ def load_openai_gpt2_weights(model, filepath):
     A .npz file contains a dictionary:
     - Each item is a trainable variable of the model.
     - The key is the name of the variable.
-    - The value are the pretrained weights to assign to the variable.
+    - The value is the pretrained weights to assign to the variable.
     """
 
     if not os.path.isfile(filepath):
@@ -88,32 +88,34 @@ def load_openai_gpt2_weights(model, filepath):
 
 def check_lora_config(cfg):
     """
-    Check that a LoRA configuration dict is correctly set up.
+    Checks that a LoRA configuration dictionary is correctly set up.
     """
 
     for k in ("num_adapters", "rank", "alpha"):
         if k not in cfg:
             raise ValueError(f"Missing key `{k}` in LoRA config dict")
     
-    message = f"`rank` and `alpha` in LoRA config dict should be tuples of length {cfg['num_adapters']}"
+    num_adapters = cfg['num_adapters']
+    message = f"`rank` and `alpha` in LoRA config dict should be tuples of length {num_adapters}"
 
     if not isinstance(cfg["rank"], (tuple, list)) or not isinstance(cfg["alpha"], (tuple, list)):
         raise ValueError(message)
 
-    if len(cfg["rank"]) != cfg["num_adapters"] or len(cfg["rank"]) != cfg["num_adapters"]: 
+    if len(cfg["rank"]) != num_adapters or len(cfg["alpha"]) != num_adapters: 
         raise ValueError(message)
 
     
 def create_gpt2_language_model_from_config(
-        model_config,
-        lora_config=None,
-        name="gpt2_lm"
-    ):
-    
+    model_config,
+    lora_config=None,
+    name="gpt2_lm"
+):
+
     """
-    Creates and builds a GPT-2 language model from a model configuration
-    dict, and an optional LoRA adapters configuration dict. Dummy inputs
-    are used to build the model.
+    Creates and builds a GPT-2 language model from a model configuration 
+    dictionary, and an optional LoRA adapters configuration dictionary.
+
+    See docstring of function create_gpt2_language_model()
 
     Returns a tf.keras.models.Model object.
     """
@@ -153,27 +155,27 @@ def create_gpt2_language_model(
     name="gpt2_lm"
 ):
     """
-    Creates and builds a GPT-2 language model (base GPT-2 model with 
-    an LM output layer). Dummy inputs are used to build the model.
+    Creates and builds a GPT-2 language model (base GPT-2 model with
+    an LM output layer) of a specified size.
+
+    Dummy inputs are used to build the model, including all the LoRA 
+    adapters if any.
 
     Arguments:
         model_size:
-            '124M', '355M', '774M', or '1542M'.
+            One of ('124M', '355M', '774M', '1542M')
 
         lora_config:
             An optional dictionary, the LoRA layers configuration.
             Specifies the number of adapters, and the rank and alpha
-            parameters of each LoRA layer. Example:
+            parameters of each LoRA layer.
+            Example:
                 lora_config = {
                     "num_adapters": 3,     # Number of adapters
                     "rank": (16, 8, 8),    # rank parameter of each adapter
                     "alpha": (32, 16, 16)  # alpha parameter of each adapter (same order as in rank)
                 }
             If `lora_config` is None, the model has no LoRA adapter.
-
-        dropout_rate:
-            Dropout rate for all the dropout layers of the model.
-            Optional, defaults to 0.1
 
     Returns:
         A tf.keras.models.Model object.
@@ -200,22 +202,22 @@ def create_gpt2_language_model(
 
 def load_gpt2_model(model_dir, model_name):
     """
-    Recreates a GPT2 model that was saved to files using 
-    the save() method of the model.
+    Recreates a GPT2 LM model that was saved to files using the save() 
+    method of the model.
 
     Arguments:
         model_dir:
             Path to the directory where the JSON configuration file 
-            and weights file were saved.
+            and weights file were saved
         model_name:
-            Name of the model.
+            Name of the model
 
     Two files must be present in the directory:
-        <model_name>.json
+        `model_name`.json
             Model configuration file, including LoRA configuration
-            if the model has LoRA layers.
-       <model_name>.weights.h5
-            Model weights.
+            if the model has LoRA layers
+       `model_name`.weights.h5
+            Weights to load into the model
 
     The model is first recreated using the JSON configuration file,
     then the weights file is loaded into it.
@@ -257,6 +259,7 @@ def print_model_variables(model, verbose=False):
     """
     If `verbose` is True, each variable of the model is printed with 
     its name and parameters shape.
+    
     If it is False, only the numbers of trainable and non-trainable
     parameters are printed.
     """

@@ -12,21 +12,21 @@ from transformers import TFGPT2LMHeadModel
 def get_openai_weights(model_size):
 
     """
-    Gets OpenAI GPT2 weights and save them to numpy arrays.
+    Gets OpenAI GPT2 weights and save them to numpy array files.
 
     To get the weights for a model of a given size, a model of the same size
     is instantiated from the Hugging Face "transformers" package.
     As the architectures of the two models are identical, their trainable variables
     match one-to-one, although their names are different (more detail available 
-    in the 'gpt2_model_from_research_papers' project).
+    in the "gpt2_model_from_research_papers" project).
 
-    We create the following dictionary:
+    The function creates the following dictionary:
     - Each item is a trainable variable of the two models.
     - The key is the name of the variable in our model.
     - The value are the weights of the variable in the Hugging Face model.
     
     Using this name-based mechanism, OpenAI weights can be loaded in our models 
-    that include LoRA layers (see function `load_openai_gpt2_weights()` 
+    that include LoRA layers (see function load_openai_gpt2_weights()
     in model_utils.py).
     """
 
@@ -60,6 +60,17 @@ def get_openai_weights(model_size):
 
 
 def export_openai_weights(project_root, model_size="124M"):
+    """
+    Gets OpenAI's pretrained weights for a specified model size
+    
+    Weights are extracted from a Hugging Face model of the same size
+    and saved in a .npz numpy array file.
+
+    The .npz file is saved in directory:
+        `project_root`/gpt2_`model_size`/pretrained_weights
+    and is named:
+        openai_weights_gpt2_`model_size`.npz
+    """
     
     if not os.path.isdir(project_root):
         raise FileNotFoundError(f"Unable to find project root directory {project_root}")
