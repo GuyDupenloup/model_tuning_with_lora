@@ -11,35 +11,33 @@ from models.gpt2_model import GPT2Model
 class GPT2LanguageModel(tf.keras.models.Model):
     """
     Implements OpenAI's GPT-2 model with language modelling head.
-    The model calculates loss and metrics including perplexity 
-    and exact-match accuracy.
 
-    The model can be trained using the fit() method and evaluated 
-    using the evaluate() method.
+    The model calculates loss and metrics including perplexity and 
+    exact-match accuracy. It can be trained using the fit() method 
+    and evaluated  using the evaluate() method.
 
     Arguments:
         model_config:
-            A dictionary, the model configuration parameters.
-            Items include:
-                "vocab_size": vocabulary size
-                "max_seq_len": input sequence maximum length (context size)
-                "d_model": hidden state size (embeddings size)
-                "n_layers": number of transformer blocks
-                "n_heads": number of attention heads
+            The model configuration parameters, a dictionary with 
+            the following items:
+                "vocab_size": vocabulary size.
+                "max_seq_len": input sequence maximum length (context size).
+                "d_model": hidden state size (embeddings size).
+                "n_layers": number of transformer blocks.
+                "n_heads": number of attention heads.
             These parameters for a given model size can be obtained using
             the get_gpt2_model_config() function in model_utils.py.
 
         lora_config:
-            An optional dictionary, the LoRA layers configuration.
-            Specifies the number of adapters, and the rank and alpha
-            parameters of each LoRA layer.
+            The LoRA layers configuration, a dictionary specifying the number
+            of adapters, and the rank and alpha parameters of each adapter.
             Example:
                 lora_config = {
                     "num_adapters": 3,     # Number of adapters
                     "rank": (16, 8, 8),    # rank parameter of each adapter
                     "alpha": (32, 16, 16)  # alpha parameter of each adapter (same order as in rank)
                 }
-            If `lora_config` is None, the model has no LoRA adapter.
+            Present only when the model has LoRA adapters.
     """
 
     def __init__(self, model_config, lora_config=None, name=None, **kwargs):
@@ -73,22 +71,20 @@ class GPT2LanguageModel(tf.keras.models.Model):
             inputs:
                 A batch of dictionaries, each of them with the following items:
                     "token_ids": 
-                        Token IDs of the prompt and annotation
-                        Shape: (batch, seq_len)
+                        Input token sequences.
+                        A tensor with shape (batch, seq_len).
                     "attention_mask":
-                        Mask specifying which token positions to attend to (hides pad tokens)
-                        Shape: (batch, seq_len)
-                    "loss_mask":
-                        Mask specifying which token positions contribute to the loss
-                        Shape: (batch, seq_len)
-                    "adapter": index of the active LoRA adapter. If None, the model
-                        has no LoRA adapters, or it does but none of them is activated.
-                        Shape: (batch)
+                        Mask specifying which token positions to attend to.
+                        A tensor with shape (batch, seq_len).
+                    "adapter":
+                        Indices of the active LoRA adapters, one for each input sequence.
+                        A tensor with shape (batch,).
+                        Present only when the model has LoRA adapters.
             training:
                 Training or evaluation mode.
 
         Returns:
-            The logits, a tensor with shape (batch, seq_len, vocab_size)
+            The logits, a tensor with shape (batch, seq_len, vocab_size).
         """
 
         if "adapter" in inputs:
@@ -121,8 +117,8 @@ class GPT2LanguageModel(tf.keras.models.Model):
         self.gpt2_model.set_dropout_rate(dropout_rate)
 
     # Freeze all the weights of the model except the adapter with the index in argument
-    def lora_freeze(self, adapter_idx):
-        self.gpt2_model.lora_freeze(adapter_idx)
+    def lora_freeze(self, adapter):
+        self.gpt2_model.lora_freeze(adapter)
 
     # Save the configuration of the model (including the LoRA configuration
     # if any) in a JSON file and its weights in a Keras weights.h5 file.
@@ -147,14 +143,18 @@ class GPT2LanguageModel(tf.keras.models.Model):
 
         Arguments:
             input_ids: 
-                Token IDs of the input sequence
-                Shape: (batch, seq_len)
+                Input token sequences.
+                A tensor with shape (batch, seq_len).
             y_pred:
-                Model predictions (logits over the vocabulary)
-                Shape: (batch, seq_len, vocab_size)
+                Model predictions (logits over the vocabulary).
+                A tensor with shape (batch, seq_len, vocab_size).
             mask:
-                Mask specifying which token positions contribute to the loss
-                Shape: (batch, seq_len)
+                Mask specifying which token positions contribute to the loss.
+                A tensor with shape (batch, seq_len).
+
+        Returns:
+            The mean cross-entropy loss over non-masked tokens.
+            A scalar tensor.
         """
 
         # Shift inputs to get labels
@@ -181,18 +181,22 @@ class GPT2LanguageModel(tf.keras.models.Model):
 
     def compute_accuracy(self, input_ids, y_pred, mask):
         """
-        Calculates the exact-match accuracy.
+        Calculates the exact-match accuracy of model predictions
+        at the sequence level.
 
         Arguments:
             input_ids: 
-                Token IDs of the input sequence
-                Shape: (batch_size, seq_len)
+                Input token sequences.
+                A tensor with shape (batch, seq_len).
             y_pred:
-                Model predictions (logits over the vocabulary)
-                Shape: (batch_size, seq_len, vocab_size)
+                Model predictions (logits over the vocabulary).
+                A tensor with shape (batch, seq_len, vocab_size).
             mask:
-                Mask specifying which token positions contribute to the loss
-                Shape: (batch_size, seq_len)
+                Mask specifying which token positions contribute to the loss.
+                A tensor with shape (batch, seq_len).
+
+        Returns:
+            The exact-match accuracy at the sequence level, a scalar tensor.
 
         """
         y_true = input_ids[:, 1:]
@@ -209,7 +213,7 @@ class GPT2LanguageModel(tf.keras.models.Model):
         incorrect = (1.0 - correct) * mask  # 1 where a label token is wrong
         
         # Per-sample: was there any incorrect label token?
-        any_incorrect = tf.reduce_sum(incorrect, axis=1)       # (batch_size,)
+        any_incorrect = tf.reduce_sum(incorrect, axis=1)       # (batch,)
         sample_correct = tf.cast(tf.equal(any_incorrect, 0.0), dtype=tf.float32)
 
         # Also check that the sample had at least one label token (mask sum > 0)
@@ -223,15 +227,23 @@ class GPT2LanguageModel(tf.keras.models.Model):
     def train_step(self, inputs):
         """
         Performs one training step.
-        Argument `inputs`:
-            A batch of dictionaries. Shape: (batch_size)
-            Each dictionary has the following items:
-                "input_ids":
-                    Token IDs sequence
-                    Shape: (batch_size, seq_len)
-                "loss_mask":
-                    Mask specifying which token positions contribute to the loss
-                    Shape: (batch_size, seq_len)
+
+        Arguments:
+            inputs:
+                A dictionary with the following items:
+                    "input_ids":
+                        Input token sequences.
+                        A tensor with shape (batch, seq_len).
+                    "attention_mask":
+                        Mask specifying which token positions to attend to.
+                        A tensor with shape (batch, seq_len).
+                    "loss_mask":
+                        Mask specifying which token positions contribute to the loss.
+                        A tensor with shape (batch, seq_len).
+                    "adapter":
+                        Indices of the active LoRA adapters, one for each input sequence.
+                        A tensor with shape (batch,).
+                        Present only when the model has LoRA adapters.
         """
 
         input_ids = inputs["input_ids"]
@@ -267,8 +279,10 @@ class GPT2LanguageModel(tf.keras.models.Model):
 
     def test_step(self, inputs):
         """
-        Performs one evaluation step. Same arguments as train_step().
+        Performs one evaluation step.
+        Same arguments as train_step().
         """
+
         input_ids = inputs["input_ids"]
         loss_mask = inputs["loss_mask"]
  

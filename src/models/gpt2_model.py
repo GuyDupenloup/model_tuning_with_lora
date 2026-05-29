@@ -44,7 +44,18 @@ class LoRALayer(tf.keras.layers.Layer):
     
     def call(self, inputs, training=None):
         """
-        Forward pass through the LoRA layer
+        Forward pass through the LoRA layer.
+
+        Arguments:
+            inputs:
+                Input tensor with shape (batch, seq_len, input_size).
+            training:
+                Training or evaluation mode.
+
+        Returns:
+            A low-rank correction tensor with the same shape as inputs,
+            scaled by alpha / rank.
+
         """
         x = self.dropout(inputs, training=training)
         return self.lora_B(self.lora_A(x)) * self.scaling
@@ -63,28 +74,33 @@ class LoRALayer(tf.keras.layers.Layer):
 def _apply_lora_layers(lora_layers, inputs, adapter_selector, training=None):
     """
     Given a list of LoRA layers and inputs to these layers, get the output
-    of the layer designated by an index selector
+    of the layer designated by a one-hot encoded selector index.
+
+    First, the outputs of all the LoRA layers are computed. Then, the adapter
+    selector is used as a mask to get the output of the selected layer 
+    (implemented as a weighted sum).
 
     Arguments:
         lora_layers:
-            List of LoRA layers
-            Length: num_adapters
+            List of LoRA layers. Length: num_adapters.
+
         inputs:
-            Inputs to the LoRA layers
-            Shape: (batch, d1, d2) with d1 and d2 depending on where
-            the LoRA layers are used (attention heads or FFN layers).
+            Inputs to the LoRA layers.
+            A tensor with shape:
+                - (batch, seq_len, d_model) in the attention heads.
+                - (batch, seq_len, 4 * d_model) and (batch, seq_len, d_model) in the FFN.
+
         adapter_selector:
-            One-hot encoded index of the selected adapter
-            Shape: (batch, num_adapters)
+            One-hot encoded index of the selected adapter.
+            A tensor with shape (batch, num_adapters).
+
         training:
-            Training or evaluation mode
+            Training or evaluation mode.
 
     Returns:
-        A tensor with shape (batch, d1, d2)
-
-    First, the outputs of all the LoRA layers are computed. Then, 
-    the one-hot encoded adapter selector is used as a mask to get 
-    the output of the selected layer (implemented as a weighted sum).
+        The output of the selected LoRA layer, a tensor with shape
+        (batch, seq_len, output_size), where output_size is the output
+        dimension of the LoRA layers.
     """
 
     # Get the outputs of the LoRA layers and stack them
@@ -235,7 +251,7 @@ class MultiHeadAttention(tf.keras.layers.Layer):
 class GPT2FeedForwardNetwork(tf.keras.layers.Layer):
     """
     Implements the FFN from the original Transformer and GPT/GPT-2 papers,
-    with the optional addition of LoRA layers on each of the two layers 
+    with the optional addition of LoRA layers to each of the two layers 
     of the FFN.
     """
 
@@ -268,7 +284,6 @@ class GPT2FeedForwardNetwork(tf.keras.layers.Layer):
                 for i in range(num_adapters)
             ]
 
-
     def call(self, inputs, adapter_selector=None, training=None):
         """
         Forward pass through the FFN
@@ -278,11 +293,11 @@ class GPT2FeedForwardNetwork(tf.keras.layers.Layer):
         if adapter_selector is not None:
             x += _apply_lora_layers(self.ff_inner_lora_layers, inputs, adapter_selector, training)
 
-        x = self.ff_out(x)
+        out = self.ff_out(x)
         if adapter_selector is not None:
-            x += _apply_lora_layers(self.ff_out_lora_layers, x, adapter_selector, training)
+            out += _apply_lora_layers(self.ff_out_lora_layers, x, adapter_selector, training)
 
-        return x
+        return out
 
     def get_config(self):
         config = super().get_config()
@@ -367,27 +382,26 @@ class GPT2Model(tf.keras.models.Model):
 
     Arguments:
         model_config:
-            A dictionary, the model configuration parameters.
-            Items include:
-                "vocab_size": vocabulary size
-                "max_seq_len": input sequence maximum length (context size)
-                "d_model": hidden state size (embeddings size)
-                "n_layers": number of transformer blocks
-                "n_heads": number of attention heads
+            The model configuration parameters, a dictionary 
+            with the following items:
+                "vocab_size": vocabulary size.
+                "max_seq_len": input sequence maximum length (context size).
+                "d_model": hidden state size (embeddings size).
+                "n_layers": number of transformer blocks.
+                "n_heads": number of attention heads.
             These parameters for a given model size can be obtained using
             the get_gpt2_model_config() function in model_utils.py.
 
         lora_config:
-            An optional dictionary, the LoRA layers configuration.
-            Specifies the number of adapters, and the rank and alpha
-            parameters of each LoRA layer.
+            The LoRA layers configuration, an optional dictionary specifying the number
+            of adapters, and the rank and alpha parameters of each of them.
             Example:
                 lora_config = {
                     "num_adapters": 3,     # Number of adapters
                     "rank": (16, 8, 8),    # rank parameter of each adapter
                     "alpha": (32, 16, 16)  # alpha parameter of each adapter (same order as in rank)
                 }
-            If `lora_config` is None, the model has no LoRA adapter.
+            The argument is present only when the model has LoRA adapters.
     """
 
     def __init__(self, model_config, lora_config=None, name=None, **kwargs):
@@ -433,17 +447,23 @@ class GPT2Model(tf.keras.models.Model):
 
         Arguments:
             inputs:
-                Token IDs sequence
-                Shape: (batch, seq_len)
+                Input token sequences.
+                A tensor with shape (batch, seq_len).
+
             attention_mask:
-                Mask specifying which token positions to attend to (hides pad tokens)
-                Shape: (batch, seq_len)
-            adapter selector:
-                One-hot encoded index of the active LoRA adapter. If None, the model
-                has no LoRA adapters, or it does but none of them is activated.
-                Shape: (batch, num_adapters)
+                Mask specifying which token positions to attend to.
+                A tensor with shape (batch, seq_len).
+
+            adapter_selector:
+                One-hot encoded indices of the active LoRA adapters.
+                A tensor with shape (batch, num_adapters).
+                Present only when the model has LoRA adapters.
+
             training:
                 Training or evaluation mode.
+
+        Returns:
+            The hidden state output, a tensor with shape (batch, seq_len, d_model).
         """
         
         # Token embeddings
@@ -473,10 +493,10 @@ class GPT2Model(tf.keras.models.Model):
 
     def set_dropout_rate(self, dropout_rate):
         """
-        Set the dropout rate for all dropout layers in the model.
+        Set the dropout rate for all the dropout layers of the model.
         
         Arguments:
-            dropout_rate: float between 0 and 1
+            dropout_rate: a float between 0 and 1.
         """
         if not 0.0 <= dropout_rate <= 1.0:
             raise ValueError(f"dropout_rate must be between 0 and 1, got {dropout_rate}")
@@ -505,13 +525,13 @@ class GPT2Model(tf.keras.models.Model):
     def lora_freeze(self, adapter):
         """
         Makes the entire model trainable, then freezes all the model weights
-        except for the LoRA layers of the adapter with index `adapter`.
+        except for the layers of the LoRA adapter with index `adapter`.
 
-        Raises an error if the model has no LoRA layers
+        Raises an error if the model has no LoRA adapter.
         """
 
         if self.lora_config is None:
-            raise ValueError("Unable to freeze. The model has no LoRA layers.")
+            raise ValueError("Unable to freeze. The model has no LoRA adapter.")
         
         num_adapters = self.lora_config["num_adapters"]
         if adapter < 0 or adapter >= num_adapters:
@@ -569,4 +589,3 @@ class GPT2Model(tf.keras.models.Model):
             "lora_config": self.lora_config
         })
         return config
-

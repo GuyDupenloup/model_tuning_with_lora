@@ -342,7 +342,7 @@ The script **src/scripts/test_prompts.py** activates the adapters, runs the exam
 
 - A unique example ID
 - The prompt followed by the model response
-- The annotation from the dataset
+- The reference answer from the dataset
 
 For the question answering and news classification tasks, I used greedy sampling. For text simplification, I used temperature=0.8 and top-k sampling with k=20.
 
@@ -350,7 +350,7 @@ For the question answering and news classification tasks, I used greedy sampling
 
 **Accuracy metric**:
 
-One obvious observation is that the exact-match accuracy metric is often too crude to reflect the actual performance of the model, and the 45.8% accuracy I obtained under-estimates it. The model does not get any credit for answers that are correct but formulated differently than the annotations, answers that are more or less verbose than the annotation, and answers that are correct but incomplete.
+One obvious observation is that the exact-match accuracy metric is often too crude to reflect the actual performance of the model, and the 45.8% accuracy I obtained under-estimates it. The model does not get any credit for answers that are correct but formulated differently than the references, answers that are more or less verbose than the reference, and answers that are correct but incomplete.
 
 Prompt IDs 10, 19, 21, 36, 40, 44, and 47 are examples of this issue.
 
@@ -358,9 +358,9 @@ Prompt IDs 10, 19, 21, 36, 40, 44, and 47 are examples of this issue.
 
 - **Factual recall on clean questions**: IDs 4, 5, 22, 24, 25, 26, 32, 34, 35, 39 are all correct and well-formed. The model handles straightforward who/what/when questions reliably.
 
-- **Appropriate answer brevity**: The model generally extracts compact spans and avoids copying entire sentences. For example in ID 19, it gives a straight-to-the-point answer while the annotation is too verbose. However, it sometimes cuts off its answer too soon, like in ID 24 where it answers "16th" instead of "16th century", or in ID 8 where it answers "go home" instead of "go home and change".
+- **Appropriate answer brevity**: The model generally extracts compact spans and avoids copying entire sentences. For example in ID 19, it gives a straight-to-the-point answer while the reference is too verbose. However, it sometimes cuts off its answer too soon, like in ID 24 where it answers "16th" instead of "16th century", or in ID 8 where it answers "go home" instead of "go home and change".
 
-- **Semantic understanding**: ID 29 ("separation" for "fragmentation") shows that the model grasps meaning even when it doesn't match the annotation exactly.
+- **Semantic understanding**: ID 29 ("separation" for "fragmentation") shows that the model grasps meaning even when it doesn't match the reference exactly.
 
 - **Robust to varied writing styles and text structures**: The model is able to locate relevant spans in contexts written in a scientific, journalistic, or historical register. 
 
@@ -432,7 +432,7 @@ The model demonstrates high accuracy, giving 46 correct answers to the 50 news t
 
 In IDs 102, 105 and 112, the model chooses Sci/Tech instead of Business. These examples all involve technology (e.g. network equipment, Cisco Systems, software service, computerized service, Computer Associates), which probably is the reason why the model got confused.
 
-In ID 115, the news is about researchers discovering that some diseases are influenced by gender. The model answers Sci/Tech while the annotation is World. Arguably, the model is correct and the annotation wrong.
+In ID 115, the news is about researchers discovering that some diseases are influenced by gender. The model answers Sci/Tech while the reference is World. Arguably, the model is correct and the reference wrong.
 
 ## 8. Conclusion
 

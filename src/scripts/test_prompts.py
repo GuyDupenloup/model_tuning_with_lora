@@ -39,20 +39,20 @@ def get_prompt_data(filepath, tokenizer, seq_len=1024, pad_token=50256):
 
     The function outputs a list of dictionaries, one per example with the following items:
         "id":
-            Unique ID of the example
+            Unique ID of the example.
         "prompt": 
-            Prompt text
+            Prompt text.
         "prompt_ids":
-            Prompt token IDs
-            List of length `seq_len`
+            Prompt token IDs.
+            A list of length `seq_len`.
         "task":
-            Task to perform (answer question, simplify text, or classify news)
+            Task to perform
+            A string, one of ('answer question', 'simplify text', 'classify news').
         "attention_mask":
-            Specifies which token positions to attend to (hides padding)
-            List of length `seq_len`
+            Specifies which token positions to attend to (hides pad tokens).
+            A list of length `seq_len`.
         "reference":
-            Reference text from the dataset
-
+            Reference response text
     """
 
     with open(filepath, "r", encoding="utf-8") as f:
@@ -80,7 +80,7 @@ def get_prompt_data(filepath, tokenizer, seq_len=1024, pad_token=50256):
         else:
             raise ValueError(
                 f"Unable to identify the task to perform from input prompt:\n{prompt}\n"
-                "\nValid tasks are: 'follow instructions', 'simplify text', 'classify news'"
+                "\nValid tasks are: 'answer question', 'simplify text', 'classify news'"
             )
         example["task"] = task
 
@@ -91,7 +91,7 @@ def get_prompt_data(filepath, tokenizer, seq_len=1024, pad_token=50256):
         # Create the attention mask
         attention_mask = [1] * len(prompt_ids)
 
-        # Pad prompt sequence and attention mask to `seq_len`
+        # Pad prompt token sequence and attention mask to `seq_len`
         if len(prompt_ids) < seq_len:
             pad_len = seq_len - len(prompt_ids)
             prompt_ids += [pad_token] * pad_len
@@ -142,7 +142,7 @@ def test_prompts(project_root, model_size):
     print(f">> Loading prompts file {prompts_fn}")
     prompt_data = get_prompt_data(prompts_fn, tokenizer)
 
-    # Load the model with LoRA adapters
+    # Load the trained model with LoRA adapters
     model_dir = os.path.join(project_root, f"gpt2_{model_size}", "trained_models")
     model_name = "lora_adapters"
 
@@ -152,7 +152,7 @@ def test_prompts(project_root, model_size):
     lora_tasks = model.lora_config["tasks"]
 
     model_responses = {}
-    annotations = {}
+    references = {}
 
     for example in prompt_data:
 
@@ -189,13 +189,13 @@ def test_prompts(project_root, model_size):
         tokens_out = tokens_out[:tokens_out.index(eos_token)]
         model_responses[id] = tokenizer.decode(tokens_out)
 
-        annotations[id] = example["reference"]
+        references[id] = example["reference"]
 
     responses_fn = os.path.join(
         project_root, f"gpt2_{model_size}", "tests", "lora_responses.txt"
     )
     print(f"Writing model responses to file {responses_fn}")
-    dump_responses(model_responses, annotations, responses_fn)
+    dump_responses(model_responses, references, responses_fn)
 
 
 if __name__ == "__main__":
