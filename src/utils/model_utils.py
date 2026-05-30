@@ -38,7 +38,7 @@ def load_openai_gpt2_weights(model, filepath):
     A .npz file contains a dictionary:
     - Each item is a trainable variable of the model.
     - The key is the name of the variable.
-    - The value is the pretrained weights to assign to the variable.
+    - The value are the pretrained weights to assign to the variable.
     """
 
     if not os.path.isfile(filepath):
@@ -110,12 +110,11 @@ def create_gpt2_language_model_from_config(
     lora_config=None,
     name="gpt2_lm"
 ):
-
     """
     Creates and builds a GPT-2 language model from a model configuration 
     dictionary, and an optional LoRA adapters configuration dictionary.
 
-    See docstring of function create_gpt2_language_model()
+    See docstring of function create_gpt2_language_model().
 
     Returns a tf.keras.models.Model object.
     """
@@ -155,27 +154,22 @@ def create_gpt2_language_model(
     name="gpt2_lm"
 ):
     """
-    Creates and builds a GPT-2 language model (base GPT-2 model with
-    an LM output layer) of a specified size.
-
-    Dummy inputs are used to build the model, including all the LoRA 
-    adapters if any.
+    Creates and builds a GPT-2 model with LM head of a specified size.
 
     Arguments:
         model_size:
-            One of ('124M', '355M', '774M', '1542M')
+            A string, one of ('124M', '355M', '774M', '1542M').
 
         lora_config:
-            An optional dictionary, the LoRA layers configuration.
-            Specifies the number of adapters, and the rank and alpha
-            parameters of each LoRA layer.
+            LoRA adapters configuration. A dictionary specifying the number
+            of adapters, and the rank and alpha parameters of each adapter.
             Example:
                 lora_config = {
                     "num_adapters": 3,     # Number of adapters
                     "rank": (16, 8, 8),    # rank parameter of each adapter
                     "alpha": (32, 16, 16)  # alpha parameter of each adapter (same order as in rank)
                 }
-            If `lora_config` is None, the model has no LoRA adapter.
+            The argument is only present when the model has LoRA adapters.
 
     Returns:
         A tf.keras.models.Model object.
@@ -208,16 +202,19 @@ def load_gpt2_model(model_dir, model_name):
     Arguments:
         model_dir:
             Path to the directory where the JSON configuration file 
-            and weights file were saved
+            and weights file were saved.
         model_name:
-            Name of the model
+            Name of the model.
+
+    Returns:
+        A tf.keras.models.Model object.
 
     Two files must be present in the directory:
         `model_name`.json
             Model configuration file, including LoRA configuration
-            if the model has LoRA layers
+            if the model has LoRA layers.
        `model_name`.weights.h5
-            Weights to load into the model
+            Weights to load into the model.
 
     The model is first recreated using the JSON configuration file,
     then the weights file is loaded into it.
@@ -257,10 +254,9 @@ def load_gpt2_model(model_dir, model_name):
 
 def print_model_variables(model, verbose=False):
     """
-    If `verbose` is True, each variable of the model is printed with 
-    its name and parameters shape.
-    
-    If it is False, only the numbers of trainable and non-trainable
+    Prints each variable of a model with its name and weights shapes.
+
+    If `verbose` is False, only the numbers of trainable and non-trainable
     parameters are printed.
     """
 

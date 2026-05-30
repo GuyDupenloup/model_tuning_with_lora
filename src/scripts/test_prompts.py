@@ -8,7 +8,7 @@ import tiktoken
 import tensorflow as tf
 
 from utils.model_utils import load_gpt2_model
-from utils.gen_text import generate_text
+from utils.gen_text import generate_token_sequences
 
 
 def get_prompt_data(filepath, tokenizer, seq_len=1024, pad_token=50256):
@@ -105,16 +105,16 @@ def get_prompt_data(filepath, tokenizer, seq_len=1024, pad_token=50256):
     return prompt_data
 
 
-def dump_responses(model_responses, references, filepath):
+def dump_sequences(sequences, references, filepath):
     """
     Write prompts, model responses and reference answers to a text file.
     """
 
     formatted = []
-    for id in model_responses.keys():
+    for id in sequences.keys():
         lines = f"\n{80 * '='}\n"
         lines += f"id: {id}\n{40 * '-'}\n"
-        lines += f"{model_responses[id]}\n{40 * '-'}\n"
+        lines += f"{sequences[id]}\n{40 * '-'}\n"
         lines += f"Reference: {references[id]}"
         formatted.append(lines)
 
@@ -151,7 +151,7 @@ def test_prompts(project_root, model_size):
 
     lora_tasks = model.lora_config["tasks"]
 
-    model_responses = {}
+    full_sequences = {}   # prompt + model response
     references = {}
 
     for example in prompt_data:
@@ -174,7 +174,7 @@ def test_prompts(project_root, model_size):
         }
         sampling_params = [sampling_params]
 
-        model_outputs = generate_text(
+        model_outputs = generate_token_sequences(
             model,
             model_inputs=model_inputs,
             output_len=100,
@@ -187,15 +187,15 @@ def test_prompts(project_root, model_size):
         # Truncate the list of tokens before the first pad token,
         # which marks the end of the model response
         tokens_out = tokens_out[:tokens_out.index(eos_token)]
-        model_responses[id] = tokenizer.decode(tokens_out)
+        full_sequences[id] = tokenizer.decode(tokens_out)
 
         references[id] = example["reference"]
 
-    responses_fn = os.path.join(
+    sequences_fn = os.path.join(
         project_root, f"gpt2_{model_size}", "tests", "lora_responses.txt"
     )
-    print(f"Writing model responses to file {responses_fn}")
-    dump_responses(model_responses, references, responses_fn)
+    print(f"Writing full sequences to file {sequences_fn}")
+    dump_sequences(full_sequences, references, sequences_fn)
 
 
 if __name__ == "__main__":

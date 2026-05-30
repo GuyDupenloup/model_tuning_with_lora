@@ -85,10 +85,7 @@ def _apply_lora_layers(lora_layers, inputs, adapter_selector, training=None):
             List of LoRA layers. Length: num_adapters.
 
         inputs:
-            Inputs to the LoRA layers.
-            A tensor with shape:
-                - (batch, seq_len, d_model) in the attention heads.
-                - (batch, seq_len, 4 * d_model) and (batch, seq_len, d_model) in the FFN.
+            Inputs to the LoRA layers, a tensor with shape (batch, seq_len, d_model).
 
         adapter_selector:
             One-hot encoded index of the selected adapter.
@@ -98,9 +95,8 @@ def _apply_lora_layers(lora_layers, inputs, adapter_selector, training=None):
             Training or evaluation mode.
 
     Returns:
-        The output of the selected LoRA layer, a tensor with shape
-        (batch, seq_len, output_size), where output_size is the output
-        dimension of the LoRA layers.
+        The output of the selected LoRA layer. 
+        A tensor with shape (batch, seq_len, d_model).
     """
 
     # Get the outputs of the LoRA layers and stack them
@@ -250,19 +246,14 @@ class MultiHeadAttention(tf.keras.layers.Layer):
 @tf.keras.utils.register_keras_serializable()
 class GPT2FeedForwardNetwork(tf.keras.layers.Layer):
     """
-    Implements the FFN from the original Transformer and GPT/GPT-2 papers,
-    with the optional addition of LoRA layers to each of the two layers 
-    of the FFN.
+    Implements the FFN from the original Transformer and GPT/GPT-2 papers.
     """
 
-    def __init__(self, d_model, lora_config=None, name=None, **kwargs):
+    def __init__(self, d_model, name=None, **kwargs):
         super().__init__(name=name, **kwargs)
 
         self.d_model = d_model
-        self.lora_config = lora_config
-        
-        add_lora_layers = lora_config is not None
-
+    
         self.ff_inner = tf.keras.layers.Dense(
             4 * d_model,
             activation=gelu_approximate,
@@ -270,19 +261,6 @@ class GPT2FeedForwardNetwork(tf.keras.layers.Layer):
         )
         self.ff_out = tf.keras.layers.Dense(d_model, name="ffn_out")
 
-        if add_lora_layers:
-            num_adapters = lora_config["num_adapters"]
-            rank = lora_config["rank"]
-            alpha = lora_config["alpha"]
-
-            self.ff_inner_lora_layers = [
-                LoRALayer(4 * d_model, rank=rank[i], alpha=alpha[i], name=f"ff_inner_lora_{i}")
-                for i in range(num_adapters)
-            ]
-            self.ff_out_lora_layers = [
-                LoRALayer(d_model, rank=rank[i], alpha=alpha[i], name=f"ff_out_lora_{i}")
-                for i in range(num_adapters)
-            ]
 
     def call(self, inputs, adapter_selector=None, training=None):
         """
@@ -290,20 +268,13 @@ class GPT2FeedForwardNetwork(tf.keras.layers.Layer):
         """
 
         x = self.ff_inner(inputs)
-        if adapter_selector is not None:
-            x += _apply_lora_layers(self.ff_inner_lora_layers, inputs, adapter_selector, training)
-
         out = self.ff_out(x)
-        if adapter_selector is not None:
-            out += _apply_lora_layers(self.ff_out_lora_layers, x, adapter_selector, training)
-
         return out
 
     def get_config(self):
         config = super().get_config()
         config.update({
-            "d_model": self.d_model,
-            "lora_config": self.lora_config
+            "d_model": self.d_model
         })
         return config
 
@@ -336,7 +307,7 @@ class GPT2Transformer(tf.keras.layers.Layer):
         )
         self.dropout_1 = tf.keras.layers.Dropout(rate=dropout_rate, name="drop_1")
         self.layer_norm_2 = tf.keras.layers.LayerNormalization(epsilon=1e-5, name="ln_2")
-        self.ffn = GPT2FeedForwardNetwork(d_model, lora_config=lora_config, name="ffn")
+        self.ffn = GPT2FeedForwardNetwork(d_model, name="ffn")
         self.dropout_2 = tf.keras.layers.Dropout(rate=dropout_rate, name="drop_2")
 
 
@@ -514,9 +485,7 @@ class GPT2Model(tf.keras.models.Model):
                     transformer.attn_heads.W_q_lora_layers,
                     transformer.attn_heads.W_k_lora_layers,
                     transformer.attn_heads.W_v_lora_layers,
-                    transformer.attn_heads.c_proj_lora_layers,
-                    transformer.ffn.ff_inner_lora_layers,
-                    transformer.ffn.ff_out_lora_layers,
+                    transformer.attn_heads.c_proj_lora_layers
                 ):
                     for lora_layer in lora_layers:
                         lora_layer.dropout.rate = dropout_rate
@@ -571,15 +540,11 @@ class GPT2Model(tf.keras.models.Model):
                         attn.W_k_lora_layers[i].trainable = False
                         attn.W_v_lora_layers[i].trainable = False
                         attn.c_proj_lora_layers[i].trainable = False
-                        transformer.ffn.ff_inner_lora_layers[i].trainable = False
-                        transformer.ffn.ff_out_lora_layers[i].trainable = False
                     else:
                         attn.W_q_lora_layers[i].trainable = True
                         attn.W_k_lora_layers[i].trainable = True
                         attn.W_v_lora_layers[i].trainable = True
                         attn.c_proj_lora_layers[i].trainable = True
-                        transformer.ffn.ff_inner_lora_layers[i].trainable = True
-                        transformer.ffn.ff_out_lora_layers[i].trainable = True
 
 
     def get_config(self):

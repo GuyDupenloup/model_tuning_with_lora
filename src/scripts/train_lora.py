@@ -23,11 +23,16 @@ def train_squad_adapter(model, data_loaders):
     Train the question answering adapter on squad dataset
     """
 
-    model.set_dropout_rate(0.1)
+    model.set_dropout_rate(0.025)
 
     optimizer = tf.keras.optimizers.AdamW(learning_rate=1e-4)
     model.compile(optimizer=optimizer)
+
     epochs = 2
+
+    # optimizer = tf.keras.optimizers.AdamW(learning_rate=1e-4)
+    # model.compile(optimizer=optimizer)
+    # epochs = 2
 
     train_ds, val_ds, test_ds = data_loaders
 

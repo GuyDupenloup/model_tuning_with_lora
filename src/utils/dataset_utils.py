@@ -10,9 +10,9 @@ import tensorflow as tf
 
 def write_dataset_tfrecords(output_dir, metadata, train_data, val_data, test_data):
     """
-    Write in `output_dir` directory:
-        - Training, validation, and test data to TFRecords
+    Writes in `output_dir` directory:
         - Dataset metadata to JSON file
+        - Training, validation, and test data to TFRecords
     """
 
     def write_tfrecord(data, filepath):
@@ -97,23 +97,22 @@ def create_data_loaders(dataset_dir, batch_size, adapter=None):
     The optional `adapter` argument is used to provide the index of a LoRA adapter.
     The data loaders replicates it in every item of every batch.
 
-    Each data loader returns a batch of dictionaries, each of them with
-    the following items:
+    Each data loader returns a dictionary with the following items:
         "token_ids": 
-            Token IDs of the prompt and annotation
-            Shape: (batch, seq_len)
+            Full token sequences, a tensor with shape (batch, seq_len).
         "attention_mask":
-            Mask specifying token positions to attend to (hides pad tokens)
-            Shape: (batch, seq_len)
+            Mask specifying which token positions to attend to.
+            A tensor with shape (batch, seq_len).
         "loss_mask":
             Mask specifying which token positions contribute to the loss
-            Shape: (batch, seq_len)
-        "adapter": optional index of the active LoRA adapter.
-            Shape: (batch)
+            A tensor with shape (batch, seq_len).
+        "adapter":
+            Index of the active LoRA adapter (same value for all sequences).
+            A tensor with shape (batch,).
 
     Returns:
-        - The dataset metadata dict (data sizes, sequence length, etc)
-        - Training, validation and test tf.data.Dataset data loaders
+        - The dataset metadata dict (data sizes, sequence length, etc).
+        - Training, validation and test tf.data.Dataset data loaders.
     """
 
     if not os.path.isdir(dataset_dir):

@@ -319,11 +319,15 @@ The results I obtained are summarized in the table below.
 
 |   LoRA adapter      |  Trainable parameters  |  Train set  |  Validation set  |  Test set  |
 |---------------------|------------------------|-------------|------------------|------------|
-|   SQuAD             |  2.21M (rank=16)       |    39.7     |   44.2           |    44.2    |
-|   wikilarge         |  1.1M (rank=8)         |    4.15     |   3.95           |    3.35    |
-|   ag_news           |  1.1M (rank=8)         |    92.9     |    93.0          |    93.0    |
+|   SQuAD    Ref      |  1.18M (rank=16)       |    39.7     |   44.2           |   44.2     |
+|   SQuAD             |  1,179,648 (rank=16)   |    36.4     |   41.6           |   41.6     |
+|   SQuAD             |  2,359,296 (rank=32)   |    46.1     |   43.6           |   43.6     | dropout=0
+|   SQuAD             |  2,359,296 (rank=32)   |    44.3     |   43.6           |   43.6     | dropout=0.05
 
-For SQuAD, the adapter reaches 44.2% versus 45.8% for the baseline (I could get to the baseline with larger adapters, but with diminishing results). For wikilarge, the adapter reaches the same perplexity as the baseline at ~3.3. For ag_news, the adapter achieves 93.0% versus 92.4% for the baseline.
+|   wikilarge         |  589,824 (rank=8)      |    4.38     |   4.09           |    3.35    |
+|   ag_news           |  589,824 (rank=8)      |    92.0     |    92.8          |    92.9    |
+
+For SQuAD, the adapter reaches 44.2% versus 45.8% for the baseline (I could get to the baseline with larger adapters, but with diminishing results). For wikilarge, the adapter reaches the same perplexity as the baseline 3.34 versus 3.35. For ag_news, the adapter achieves 92.9% versus 92.4% for the baseline.
 
 Note that all adapters are more or less under-fitted, which is probably a consequence of the small number of trainable parameters of each adapter.
 

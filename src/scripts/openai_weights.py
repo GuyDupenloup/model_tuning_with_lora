@@ -70,6 +70,9 @@ def export_openai_weights(project_root, model_size="124M"):
         `project_root`/gpt2_`model_size`/pretrained_weights
     and is named:
         openai_weights_gpt2_`model_size`.npz
+
+    WARNING: This script can only be run with Tensorflow 2.14.1 or older.
+    
     """
     
     if not os.path.isdir(project_root):
