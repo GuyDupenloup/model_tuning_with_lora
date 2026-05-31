@@ -15,11 +15,13 @@ In this project, I experimented with tuning a GPT-2 model for the following appl
 
 My goals were as follows:
 
-1. Create a GPT-2 model with built-in LoRA adapters, along with the full pipeline required to train and evaluate models, and run inference using batches of prompts that use different adapters.
+1. Create a GPT-2 model with built-in LoRA adapters, along with the full pipeline required to train and evaluate models.
 
-2. Get hands-on experience with fine-tuning a model to perform multiple tasks, comparing sequential fine-tuning of the same model and multiple LoRA adapters.
+2. Enable efficient inference with batches of prompts that use different LoRA adapters depending on task of each prompt.
 
-3. Run prompts through the model with LoRA adapters and analyze results.
+3. Compare sequential fine-tuning of the same model and multiple LoRA adapters.
+
+4. Run example prompts through models, analyze results and the effectiveness of metrics to predict the model performance.
 
 The code I wrote to conduct experiments was designed to be straightforward to run, with hardcoded directory structure, file names, and flow handling. However, it can be easily extended or modified to support additional tasks and datasets, and many components can be reused in different environments.
 
@@ -55,7 +57,7 @@ The source code for this project is in the **./src** directory and is organized 
 
 I used the *transformers* package from Hugging Face to get OpenAI GPT-2 weights. Using this package requires TensorFlow version 2.14.1 or older. The packages I used are listed in file **requirements_1.txt**.
 
-Once extracted from the Hugging Face model, weights are saved to numpy arrays. Then, you can switch to more recent versions of TensorFlow to train, evaluate and test the models. The packages I used for that are listed in file **requirements_2.txt**.
+Once extracted from the Hugging Face model, weights are saved to numpy arrays. Therefore, you can switch to more recent versions of TensorFlow to train, evaluate and test the models. The packages I used are listed in file **requirements_2.txt**.
 
 ### 2.3 Python search path
 
@@ -162,34 +164,45 @@ If you are not interested in the sequential training experiments, you can skip s
 
 ## 4. GPT-2 model enhancements
 
-I made the following enhancements to the GPT-2 model I created in my previous project:
+I made the following enhancements to the GPT-2 model I created in my GPT-2 model creation project:
 
-- Built-in Low-Rank Adaptation (LoRA) layers inside the multi-head attention blocks and feed-forward network
+- Built-in Low-Rank Adaptation (LoRA) layers inside the multi-head attention blocks (any number of them)
 
 - Mechanism to load OpenAI pretrained weights into the model when LoRA adapters are present
 
-- Loss mask to exclude the prompt from loss calculation, keeping only the output part
+- Language modelling head that includes loss and metrics calculation, and training and evaluation methods
 
-- Language modelling head that includes loss and metrics calculation, and LoRA adapters management
+- Loss mask specifying which token positions contribute to the loss
 
-For LoRA adapters, I used the architecture described in the original paper published by Edward J. Hu, Yelong Shen, et al in 2021:
+- Support for batch inference with different prompts in a batch using different LoRA adapters
+
+For LoRA layers, I used the architecture described in the original paper published by Edward J. Hu, Yelong Shen, et al in 2021:
 
 [LoRA: Low-Rank Adaptation of Large Language Models.](https://arxiv.org/abs/2106.09685).
 
 
 ## 5. Model tasks, datasets and prompts
 
-### 5.1 Loss and attention masks
+### 5.1 Tasks and datasets
 
-All the prompts start with a "### Task: " header that indicates the task the model has to perform. Tasks include "answer question" when training and evaluating with the SQuAD dataset, "simplify text" with wikilarge, and "classify news" with ag_news. 
+In the format I used, all the prompts start with a "### Task: " header that indicates which task the model has to perform. 
 
-I used **tiktoken** for tokenization which does not have a dedicated \<EOS\> token, so I used the pad token 50256 to mark the end of the model answers.
+Tasks include "answer question", "simplify text" and "classify news". The model is trained on these tasks using the SQuAD, wikilarge and ag_news datasets respectively. 
 
-The loss mask hides the entire prompt for loss calculation, only keeping the model answer. This way, the model is only rewarded on its answer, not on the prompt. The attention mask hides all the pad tokens that come after the ending pad token used as the \<EOS\> token. Note that it is crucial that the loss mask and attention mask both keep the ending pad token as it informs the model of where to end its answer.
+### 5.2 Masks and \<EOS\> token
+
+Two masks are applied to the full token sequence:
+
+- *Attention mask* specifying which token positions to attend to
+- *Loss mask* specifying which token positions contribute to the loss
+
+The attention mask is used to hide pad tokens from the attention heads, and the loss mask is used to exclude the prompt from loss calculation to ensure that the model is only rewarded on its answers.
+
+I used **tiktoken** for tokenization which does not have a dedicated \<EOS\> token. Therefore, I used the pad token 50256 to mark the end of the model answers. The attention mask and loss mask are set up to include this token in the meaningful part of the sequence, unlike subsequent pad tokens which actually are padding.
 
 ### 5.2 SQuAD dataset
 
-Examples from the SQuAD dataset are formatted as shown below. The prompt ends after "### Answer: " and is followed by the model answer. The pad token used as < EOS > token is shown as "<|endoftext|>".
+Examples from the SQuAD dataset are formatted as shown below. The prompt ends after "### Answer: " and is followed by the model answer. The pad token used as \<EOS\> token is shown as "<|endoftext|>".
 
 ```
 ### Task: answer question
@@ -212,7 +225,6 @@ Examples from the wikilarge dataset are formatted as shown below. The prompt end
 
 ### Simplified: Historians say he led the change of New South Wales from a penal colony to a free settlement .<|endoftext|>
 ```
-
 
 ### 5.4 ag_news dataset
 
@@ -312,20 +324,25 @@ For example in experiment #3, the model trained on SQuAD starting from pretraine
 
 ### 6.4 LoRA adapters training
 
-Next, I trained three LoRA adapters, each one being responsible for a given task.
+Next, I trained three LoRA adapters, each of them being responsible for a given task.
 
 The results I obtained are summarized in the table below.
 
 
 |   LoRA adapter      |  Trainable parameters  |  Train set  |  Validation set  |  Test set  |
 |---------------------|------------------------|-------------|------------------|------------|
-|   SQuAD    Ref      |  1.18M (rank=16)       |    39.7     |   44.2           |   44.2     |
-|   SQuAD             |  1,179,648 (rank=16)   |    36.4     |   41.6           |   41.6     |
-|   SQuAD             |  2,359,296 (rank=32)   |    46.1     |   43.6           |   43.6     | dropout=0
-|   SQuAD             |  2,359,296 (rank=32)   |    44.3     |   43.6           |   43.6     | dropout=0.05
 
-|   wikilarge         |  589,824 (rank=8)      |    4.38     |   4.09           |    3.35    |
-|   ag_news           |  589,824 (rank=8)      |    92.0     |    92.8          |    92.9    |
+|   SQuAD             |  590K (rank=8)     |    42.3     |   42.2           |    42.2    |
+|   SQuAD             | 1.18M (rank=16)    |    44.1     |   43.0           |    43.0    |
+|   SQuAD             | 2.36M (rank=32)    |    46.0     |    44.5          |    44.5    |
+|   SQuAD             | 4.72M (rank=64)    |    39.7     |    44.3          |    44.3    |
+
+|   wikilarge         |  590K (rank=8)     |    4.38     |   4.09           |    3.35    |
+|   ag_news           |  590 (rank=8)      |    92.0     |    92.8          |    92.9    |
+
+589,824 * 3 = 1,769,472   -> 1.77M
+1,179,648
+2,359,296
 
 For SQuAD, the adapter reaches 44.2% versus 45.8% for the baseline (I could get to the baseline with larger adapters, but with diminishing results). For wikilarge, the adapter reaches the same perplexity as the baseline 3.34 versus 3.35. For ag_news, the adapter achieves 92.9% versus 92.4% for the baseline.
 
@@ -340,9 +357,9 @@ Additionally, the LoRA adapters don't alter the model weights. If all adapters a
 
 ### 7.1 Testing prompts
 
-I tested the model with LoRA adapters using 50 examples for each adapter. I extracted them from the test sets of the datasets, which the model did not see during training. They are in the JSON file **\<project root\>/gtpt2_124M/prompt_tests/example_prompts.json**. 
+I tested the model with LoRA adapters using 50 examples for each task. I extracted them from the test sets of the datasets, which the model did not see during training, to have references to analyze results. They are in JSON file **\<project root\>/gtpt2_124M/prompt_tests/example_prompts.json**. 
 
-The script **src/scripts/test_prompts.py** activates the adapters, runs the example prompts through the model, and collects the model responses. Then, it writes to file **\<project root\>/gtpt2_124M/prompt_tests/model_responses.txt** each example comprising of:
+The script **src/scripts/test_prompts.py** loads the JSOn file, runs the example prompts through the model, and collects the model responses. Then, it writes to file **\<project root\>/gtpt2_124M/prompt_tests/model_responses.txt** each example comprising of:
 
 - A unique example ID
 - The prompt followed by the model response
@@ -354,7 +371,7 @@ For the question answering and news classification tasks, I used greedy sampling
 
 **Accuracy metric**:
 
-One obvious observation is that the exact-match accuracy metric is often too crude to reflect the actual performance of the model, and the 45.8% accuracy I obtained under-estimates it. The model does not get any credit for answers that are correct but formulated differently than the references, answers that are more or less verbose than the reference, and answers that are correct but incomplete.
+One obvious observation is that the exact-match accuracy metric is often too crude. The model does not get any credit for answers that are correct but formulated differently than the references, answers that are more or less verbose than the reference, and answers that are correct but incomplete. As a result, the 45.8% accuracy of the model underestimates the true performance of the model.
 
 Prompt IDs 10, 19, 21, 36, 40, 44, and 47 are examples of this issue.
 
@@ -444,4 +461,6 @@ This project gave me hands-on experience with the full fine-tuning pipeline for 
 
 The sequential training experiments clearly illustrated the catastrophic forgetting problem: fine-tuning a single model on multiple tasks sequentially destroys previously acquired capabilities. LoRA adapters provide an efficient solution. Using three adapters totaling 4.4M parameters, which represents only a 3.5% of the base model parameters, the model achieves near-baseline performance on all three tasks simultaneously, without touching the original weights during adapter training.
 
-The prompt analysis revealed that raw accuracy metrics can be misleading. The SQuAD model's 45.8% exact-match accuracy underestimates its actual usefulness, while the wikilarge model's good perplexity score does not reflect its strong tendency to hallucinate. This exercise showed me how essential qualitative analysis is alongside quantitative metrics.
+The prompt analysis revealed that raw accuracy metrics can be misleading. The SQuAD model's 45.8% exact-match accuracy underestimates its actual usefulness, while the wikilarge model's good perplexity score does not reflect its strong tendency to hallucinate and alter meaning.
+
+

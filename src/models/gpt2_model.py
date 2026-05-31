@@ -7,7 +7,6 @@ def gelu_approximate(x):
     return tf.nn.gelu(x, approximate=True)
 
 
-@tf.keras.utils.register_keras_serializable()
 class LoRALayer(tf.keras.layers.Layer):
     """
     Implements the Low-Rank Adaptation layer from the original LoRA paper. 
@@ -59,16 +58,6 @@ class LoRALayer(tf.keras.layers.Layer):
         """
         x = self.dropout(inputs, training=training)
         return self.lora_B(self.lora_A(x)) * self.scaling
-
-    def get_config(self):
-        config = super().get_config()
-        config.update({
-            "output_size": self.output_size,
-            "rank": self.rank,
-            "alpha": self.alpha,
-            "dropout_rate": self.dropout_rate
-        })
-        return config
 
 
 def _apply_lora_layers(lora_layers, inputs, adapter_selector, training=None):
@@ -231,19 +220,7 @@ class MultiHeadAttention(tf.keras.layers.Layer):
 
         return out
 
-    def get_config(self):
-        config = super().get_config()
-        config.update({
-            "max_seq_len": self.max_seq_len,
-            "d_model": self.d_model,
-            "n_heads": self.n_heads,
-            "lora_config": self.lora_config,
-            "dropout_rate": self.dropout_rate
-        })
-        return config
 
-
-@tf.keras.utils.register_keras_serializable()
 class GPT2FeedForwardNetwork(tf.keras.layers.Layer):
     """
     Implements the FFN from the original Transformer and GPT/GPT-2 papers.
@@ -271,15 +248,7 @@ class GPT2FeedForwardNetwork(tf.keras.layers.Layer):
         out = self.ff_out(x)
         return out
 
-    def get_config(self):
-        config = super().get_config()
-        config.update({
-            "d_model": self.d_model
-        })
-        return config
 
-
-@tf.keras.utils.register_keras_serializable()
 class GPT2Transformer(tf.keras.layers.Layer):
     """
     Implements the transformer block from the original Transformer
@@ -331,19 +300,7 @@ class GPT2Transformer(tf.keras.layers.Layer):
 
         return output
 
-    def get_config(self):
-        config = super().get_config()
-        config.update({
-            "max_seq_len": self.max_seq_len,
-            "d_model": self.d_model,
-            "n_heads": self.n_heads,
-            "lora_config": self.lora_config,
-            "dropout_rate": self.dropout_rate
-        })
-        return config
 
-
-@tf.keras.utils.register_keras_serializable()
 class GPT2Model(tf.keras.models.Model):
     """
     Implements the GPT-2 model from OpenAI's GPT-2 paper.
@@ -545,12 +502,3 @@ class GPT2Model(tf.keras.models.Model):
                         attn.W_k_lora_layers[i].trainable = True
                         attn.W_v_lora_layers[i].trainable = True
                         attn.c_proj_lora_layers[i].trainable = True
-
-
-    def get_config(self):
-        config = super().get_config()
-        config.update({
-            "model_config": self.model_config,
-            "lora_config": self.lora_config
-        })
-        return config

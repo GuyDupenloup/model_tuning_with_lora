@@ -7,7 +7,6 @@ import tensorflow as tf
 from models.gpt2_model import GPT2Model
 
 
-@tf.keras.utils.register_keras_serializable()
 class GPT2LanguageModel(tf.keras.models.Model):
     """
     Implements OpenAI's GPT-2 model with language modelling head.
@@ -317,11 +316,3 @@ class GPT2LanguageModel(tf.keras.models.Model):
             self.test_accuracy_tracker,
             self.test_perplexity_tracker
         ]
-            
-    def get_config(self):
-        config = super().get_config()
-        config.update({
-            "model_config": self.model_config,
-            "lora_config": self.lora_config
-        })
-        return config
