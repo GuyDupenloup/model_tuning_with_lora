@@ -66,20 +66,24 @@ def _apply_lora_layers(lora_layers, inputs, adapter_selector, training=None):
     of the layer designated by a one-hot encoded selector index.
 
     First, the outputs of all the LoRA layers are computed. Then, the adapter
-    selector is used as a mask to get the output of the selected layer 
-    (implemented as a weighted sum).
+    selector is used as a mask to get the output of the selected layer
+    (computed as a weighted sum).
+
+    The adapter selector is the one-hot-encoded index of the active adapter.
+
+    All its bits can also be set to zero (instead of being a one-hot encoding). 
+    In this case, the function outputs zeros. The LoRA layers don't contribute,
+    and the model behaves like if no LoRA layer was present.
 
     Arguments:
         lora_layers:
             List of LoRA layers. Length: num_adapters.
-
         inputs:
             Inputs to the LoRA layers, a tensor with shape (batch, seq_len, d_model).
-
         adapter_selector:
-            One-hot encoded index of the selected adapter.
+            One-hot encoded index of the selected adapter. All bits set to 0 if no LoRA
+            adapter is active.
             A tensor with shape (batch, num_adapters).
-
         training:
             Training or evaluation mode.
 
@@ -384,6 +388,7 @@ class GPT2Model(tf.keras.models.Model):
 
             adapter_selector:
                 One-hot encoded indices of the active LoRA adapters.
+                All zeros at positions where no adapter is active.
                 A tensor with shape (batch, num_adapters).
                 Present only when the model has LoRA adapters.
 
@@ -392,6 +397,20 @@ class GPT2Model(tf.keras.models.Model):
 
         Returns:
             The hidden state output, a tensor with shape (batch, seq_len, d_model).
+
+        All the bits of an index in the adapter selector can be set to zero,
+        instead of being a one-hot encoding. In this case, no LoRA adapter is active
+        at this position, and the model reverts back to pretrained weights
+        with no adapter.
+
+        For example, for a model with 3 LoRA adapters:
+            adapter_selector = [
+                [1, 0, 0],       # Activate adapter #0
+                [0, 0, 1],       # Activate adapter #2
+                [0, 0, 0],       # Don't activate any adapter
+                [0, 1, 0]        # Activate adapter #1
+            ]
+
         """
         
         # Token embeddings

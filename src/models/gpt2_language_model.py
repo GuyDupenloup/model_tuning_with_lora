@@ -79,6 +79,9 @@ class GPT2LanguageModel(tf.keras.models.Model):
                         Indices of the active LoRA adapters, one for each input sequence.
                         A tensor with shape (batch,).
                         Present only when the model has LoRA adapters.
+                        If an index is greater than or equal to num_adapters, no adapter 
+                        will be selected at this sequence position and the network will 
+                        behave as if there was no adapter (pretrained weights will be used).
             training:
                 Training or evaluation mode.
 
@@ -88,6 +91,8 @@ class GPT2LanguageModel(tf.keras.models.Model):
 
         if "adapter" in inputs:
             # Convert the adapter index to one-hot
+            # If an index is >= num_adapters, it is encoded 
+            # to tf.zeros((batch_size, num_adapters)).
             adapter_selector = tf.one_hot(
                 inputs["adapter"],
                 depth=self.lora_config["num_adapters"],
