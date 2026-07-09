@@ -200,7 +200,7 @@ The attention mask is used to hide pad tokens from the attention heads, and the 
 
 I used **tiktoken** for tokenization which does not have a dedicated \<EOS\> token. Therefore, I used the pad token 50256 to mark the end of the model answers. The attention mask and loss mask are set up to include this token in the meaningful part of the sequence, unlike subsequent pad tokens which actually are padding.
 
-### 5.2 SQuAD dataset
+### 5.3 SQuAD dataset
 
 Examples from the *SQuAD* dataset are formatted as shown below. The prompt ends after "### Answer: " and is followed by the model answer. The pad token used as \<EOS\> token is shown as "<|endoftext|>".
 
@@ -214,7 +214,7 @@ Examples from the *SQuAD* dataset are formatted as shown below. The prompt ends 
 ### Answer: I Believe<|endoftext|>
 ```
 
-### 5.3 wikilarge dataset
+### 5.4 wikilarge dataset
 
 Examples from the *wikilarge* dataset are formatted as shown below. The prompt ends after "### Simplified: " and is followed by the model answer.
 
@@ -226,7 +226,7 @@ Examples from the *wikilarge* dataset are formatted as shown below. The prompt e
 ### Simplified: Historians say he led the change of New South Wales from a penal colony to a free settlement .<|endoftext|>
 ```
 
-### 5.4 ag_news dataset
+### 5.5 ag_news dataset
 
 Examples from the *ag_news* dataset are formatted as shown below. The prompt ends after "### Label: " and is followed by the model answer, which is either "Business", "Sports", "Sci/Tech", or "World".
 
