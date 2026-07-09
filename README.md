@@ -363,7 +363,7 @@ For the question answering and news classification tasks, I used greedy sampling
 
 **Accuracy metric**:
 
-One obvious observation is that the exact-match accuracy metric is often too crude. It does not give any credit to the model for answers that are correct but formulated differently than the references, answers that are more or less verbose than the references, and answers that are correct but incomplete. As a result, the 45.8% accuracy of the model clearly underestimates the true performance of the model.
+One obvious observation is that the exact-match accuracy metric is often too crude. It does not give any credit to the model for answers that are correct but formulated differently than the references, answers that are more or less verbose than the references, and answers that are correct but incomplete. As a result, the 45.8% accuracy of the model clearly underestimates its true performance.
 
 Prompt IDs 10, 19, 21, 36, 40, 44, and 47 are examples of this issue.
 
