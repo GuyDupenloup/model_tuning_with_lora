@@ -333,7 +333,7 @@ The results I obtained are summarized in the table below.
 |   SQuAD             |  590K (rank=8)         |    42.3     |   42.2           |    42.2    |
 |   SQuAD             | 1.18M (rank=16)        |    44.1     |   43.0           |    43.0    |
 |   SQuAD             | 2.36M (rank=32)        |    46.0     |    44.5          |    44.5    |
-|   SQuAD             | 4.72M (rank=64)        |    39.7     |    44.3          |    44.3    |
+|   SQuAD             | 4.72M (rank=64)        |    47.5     |    44.8          |    44.7    |
 |   wikilarge         |  590K (rank=8)         |    4.38     |   4.09           |    3.35    |
 |   ag_news           |  590K (rank=8)         |    92.0     |    92.8          |    92.9    |
 
